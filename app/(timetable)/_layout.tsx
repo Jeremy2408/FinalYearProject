@@ -1,9 +1,9 @@
 import { Stack } from "expo-router";
+
 const Layout = () => {
     return (
         <Stack>
-            <Stack.Screen name="moodLog" options={{ headerShown: true }} />
-            
+            <Stack.Screen name="table" options={{ headerShown: false }} />
         </Stack>
     );
 };
