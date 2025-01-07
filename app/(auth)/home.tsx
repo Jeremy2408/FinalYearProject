@@ -15,6 +15,9 @@ const Page = () => {
             <Button title="Sign Out" onPress={() => auth.signOut()} />
             <Button title="Go to Mood Log" onPress={() => router.push('/(log)/moodLog')} />
             <Button title="Timetable" onPress={() => router.push('/(timetable)/table')} />
+            <Button title="Chatbot" onPress={() => router.push('/(chatbot)/chat')} />  
+                
+
     
     
     
