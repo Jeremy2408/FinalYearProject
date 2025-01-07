@@ -7,29 +7,26 @@ import { useRouter } from 'expo-router';
 
 const MoodLog = () => {
     const [mood, setMood] = useState('');
-    const [day, setDay] = useState('');
     const db = getFirestore(FIREBASE_APP);
     const auth = getAuth();
     const user = auth.currentUser;
     const router = useRouter();
 
-    const handleSubmit = async () => {
-        const validDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday','Saturday','Sunday'];
-        if (!validDays.includes(day)) {
-            Alert.alert('Error', 'Please enter a valid day (Monday to Sunday)');
-            return;
-        }
+    const getCurrentDay = () => {
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        return days[new Date().getDay()];
+    };
 
+    const handleSubmit = async () => {
         try {
             await addDoc(collection(db, 'Moods'), {
                 mood: mood,
-                day: day,
+                day: getCurrentDay(), 
                 timestamp: new Date(),
                 userId: user?.uid,
             });
             Alert.alert('Success', 'Mood submitted successfully');
-            setMood(''); // Clear the input after submission
-            setDay(''); // Clear the day input after submission
+            setMood(''); 
         } catch (error) {
             console.error('Error adding document: ', error);
             Alert.alert('Error', 'Failed to submit mood');
@@ -39,13 +36,7 @@ const MoodLog = () => {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Log Your Mood</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Enter day (Monday to Sunday)"
-                placeholderTextColor="#000"
-                value={day}
-                onChangeText={setDay}
-            />
+            <Text style={styles.subtitle}>Today is {getCurrentDay()}</Text>
             <TextInput
                 style={styles.input}
                 multiline
@@ -69,6 +60,10 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 24,
+        marginBottom: 8,
+    },
+    subtitle: {
+        fontSize: 18,
         marginBottom: 16,
     },
     input: {
