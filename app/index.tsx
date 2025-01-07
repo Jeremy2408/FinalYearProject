@@ -3,6 +3,7 @@ import { useState } from "react";
 import { FIREBASE_AUTH } from "@/FirebaseConfig"; 
 import { FirebaseError } from "firebase/app";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import React from "react";
 
 export default function Index() {
   const [email, setEmail] = useState('');
