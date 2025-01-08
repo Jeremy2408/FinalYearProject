@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Button } from 'react-native';
 import { GiftedChat, IMessage } from 'react-native-gifted-chat';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchOpenAIResponse } from '../../services/openaiService';
@@ -8,6 +8,8 @@ import { FIREBASE_APP } from '@/FirebaseConfig';
 
 const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<IMessage[]>([]);
+  const [typing, setTyping] = useState(false); 
+
   const db = getFirestore(FIREBASE_APP);
 
   useEffect(() => {
@@ -38,6 +40,26 @@ const Chatbot: React.FC = () => {
     loadMessages();
   }, []);
 
+  const clearChatCache = async () => {
+    try {
+      await AsyncStorage.removeItem('chat_messages'); 
+      setMessages([
+        {
+          _id: 1,
+          text: 'Hello! How are you feeling today?',
+          createdAt: new Date(),
+          user: {
+            _id: 2,
+            name: 'AI Assistant',
+            avatar: 'https://placeimg.com/140/140/any',
+          },
+        },
+      ]); 
+    } catch (error) {
+      console.error('Error clearing chat cache:', error);
+    }
+  };
+
   const onSend = useCallback(async (newMessages: IMessage[] = []) => {
     setMessages((previousMessages) =>
       GiftedChat.append(previousMessages, newMessages)
@@ -48,6 +70,9 @@ const Chatbot: React.FC = () => {
     if (!userMessage) return;
 
     try {
+
+      setTyping(true);
+
       const botResponse = await fetchOpenAIResponse(userMessage);
       const botMessage: IMessage = {
         _id: Math.random().toString(36).substring(7),
@@ -81,11 +106,16 @@ const Chatbot: React.FC = () => {
       await Promise.all(dbPromises);
     } catch (error) {
       console.error('Error sending message:', error);
+    }finally {
+      setTyping(false);
     }
-  }, [messages]);
+  }, []);
+
 
   return (
     <View style={styles.container}>
+
+      <Button title="Clear Chat" onPress={clearChatCache} />
       <GiftedChat
         messages={messages}
         onSend={(messages) => onSend(messages)}
@@ -95,6 +125,7 @@ const Chatbot: React.FC = () => {
         minComposerHeight={40}
         maxComposerHeight={80}
         keyboardShouldPersistTaps="handled"
+        isTyping={typing} 
       />
     </View>
   );
