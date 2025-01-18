@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { CalendarBody, CalendarContainer, CalendarHeader, DraggingEvent, DraggingEventProps, OnCreateEventResponse } from '@howljs/calendar-kit';
-import { View } from 'react-native';
+import { View, Modal, TextInput, Button } from 'react-native';
 
 const Calendar = () => {
   const [events, setEvents] = useState([
@@ -14,23 +14,21 @@ const Calendar = () => {
     
   ]);
 
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [newEventTitle, setNewEventTitle] = useState('');
+  const [newEventDetails, setNewEventDetails] = useState<OnCreateEventResponse | null>(null);
+
   const handleDragCreateStart = (start: OnCreateEventResponse) => {
     console.log("Started creating event at:", start);
   };
 
   const handleDragCreateEnd = (event: OnCreateEventResponse) => {
-    console.log("New event:", event);
-    
-    const newEvent = {
-      id: (events.length + 1).toString(),
-      title: 'New Event', 
-      start: event.start,
-      end: event.end,
-      color: getRandomColor(),
-    };
 
-    setEvents((prevEvents) => [...prevEvents, newEvent]);
+    setNewEventDetails(event); 
+    setModalVisible(true); 
   };
+
+  
 
   const getRandomColor = () => {
     const letters = '0123456789ABCDEF';
@@ -70,18 +68,67 @@ const Calendar = () => {
     );
   }, []);
 
-  return (
-    <CalendarContainer
-      allowDragToCreate={true}
-      onDragCreateEventStart={handleDragCreateStart}
-      onDragCreateEventEnd={handleDragCreateEnd}
-      events={events}
-      defaultDuration={60} 
-      dragStep={15} 
+  const addEvent = () => {
+    if (!newEventDetails) return;
+
+    const newEvent = {
+      id: (events.length + 1).toString(),
+      title: newEventTitle || 'Untitled Event',
+      start: newEventDetails.start,
+      end: newEventDetails.end,
+      color: getRandomColor(),
+    };
+
+    setEvents((prevEvents) => [...prevEvents, newEvent]);
+    setNewEventTitle(''); 
+    setNewEventDetails(null); 
+    setModalVisible(false); 
+  };
+
+  const renderTitleModal = () => (
+    <Modal
+      visible={isModalVisible}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setModalVisible(false)}
     >
-      <CalendarHeader />
-      <CalendarBody renderDraggingEvent={renderDraggingEvent} />
-    </CalendarContainer>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <View style={{ width: '80%', backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
+          <TextInput
+            placeholder="Enter event title"
+            value={newEventTitle}
+            onChangeText={setNewEventTitle}
+            style={{ borderBottomWidth: 1, marginBottom: 20 }}
+          />
+          <Button title="Create Event" onPress={addEvent} />
+          <Button title="Cancel" onPress={() => setModalVisible(false)} />
+
+        </View>
+      </View>
+    </Modal>
+  );
+
+
+  return (
+    <>
+      <CalendarContainer
+        allowDragToEdit={true}
+        allowPinchToZoom={true}
+        minTimeIntervalHeight={30}
+        allowDragToCreate={true}
+        onDragCreateEventStart={handleDragCreateStart}
+        onDragCreateEventEnd={handleDragCreateEnd}
+        events={events}
+        defaultDuration={60} 
+        dragStep={15} 
+      >
+        <CalendarHeader />
+        <CalendarBody renderDraggingEvent={renderDraggingEvent} />
+      </CalendarContainer>
+      {renderTitleModal()}
+    </>
+    
+    
   );
 };
 
