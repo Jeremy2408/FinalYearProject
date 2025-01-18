@@ -1,6 +1,8 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { CalendarBody, CalendarContainer, CalendarHeader, DraggingEvent, DraggingEventProps, OnCreateEventResponse } from '@howljs/calendar-kit';
 import { View, Modal, TextInput, Button } from 'react-native';
+import { collection, addDoc, getFirestore, getDocs } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 const Calendar = () => {
   const [events, setEvents] = useState([
@@ -68,22 +70,74 @@ const Calendar = () => {
     );
   }, []);
 
-  const addEvent = () => {
+  const addEvent = async () => {
     if (!newEventDetails) return;
+  
+    const auth = getAuth();
+    const user = auth.currentUser; 
+  
+    if (!user) {
+      console.error("User not authenticated");
+      return;
+    }
 
+  const newEventId = new Date().toISOString();
+    
+
+  
     const newEvent = {
-      id: (events.length + 1).toString(),
+      id: newEventId, 
       title: newEventTitle || 'Untitled Event',
       start: newEventDetails.start,
       end: newEventDetails.end,
       color: getRandomColor(),
     };
 
-    setEvents((prevEvents) => [...prevEvents, newEvent]);
-    setNewEventTitle(''); 
-    setNewEventDetails(null); 
-    setModalVisible(false); 
+    const db = getFirestore();
+    
+    try {
+      await addDoc(collection(db, 'users', user.uid, 'events'), newEvent);
+  
+      setEvents((prevEvents) => [...prevEvents, newEvent]); 
+      setNewEventTitle('');
+      setNewEventDetails(null);
+      setModalVisible(false);
+    } catch (error) {
+      console.error("Error saving event to Firestore:", error);
+    } 
   };
+  const fetchEvents = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+  
+    if (!user) {
+      console.error("User not authenticated");
+      return;
+    }
+  
+    const db = getFirestore();
+    try {
+      const querySnapshot = await getDocs(collection(db, 'users', user.uid, 'events'));
+      const userEvents = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          title: data.title,
+          start: data.start,
+          end: data.end,
+          color: data.color,
+        };
+      });
+  
+      setEvents(userEvents); 
+    } catch (error) {
+      console.error("Error fetching events from Firestore:", error);
+    }
+  };
+  
+  useEffect(() => {
+    fetchEvents();
+  }, []);
 
   const renderTitleModal = () => (
     <Modal
