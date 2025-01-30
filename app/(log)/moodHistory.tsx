@@ -14,6 +14,16 @@ interface MoodLog {
     };
 }
 
+const getRelativeTime = (timestamp: { seconds: number }) => {
+    const date = new Date(timestamp.seconds * 1000);
+    const diff = (Date.now() - date.getTime()) / 1000;
+
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+    return `${Math.floor(diff / 86400)} days ago`;
+};
+
 const MoodHistory = () => {
     const [moodLogs, setMoodLogs] = useState<MoodLog[]>([]);
     const db = getFirestore(FIREBASE_APP);
@@ -39,8 +49,8 @@ const MoodHistory = () => {
     const renderItem: ListRenderItem<MoodLog> = ({ item }) => (
         <View style={styles.logItem}>
             <Text style={styles.logText}>Day: {item.day}</Text>
-            <Text style={styles.logText}>Mood: {item.mood}</Text>
-            <Text style={styles.logText}>Timestamp: {new Date(item.timestamp.seconds * 1000).toLocaleString()}</Text>
+            <Text style={styles.moodText}>Mood: {item.mood}</Text>
+            <Text style={styles.timestamp}>{getRelativeTime(item.timestamp)}</Text>
         </View>
     );
 
@@ -60,19 +70,38 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
-        backgroundColor: '#fff',
+        backgroundColor: '#f5f5f5',
     },
     title: {
         fontSize: 24,
+        fontWeight: 'bold',
         marginBottom: 16,
+        textAlign: 'center',
     },
     logItem: {
         padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
+        marginVertical: 8,
+        backgroundColor: '#ffffff',
+        borderRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     logText: {
         fontSize: 16,
+        fontWeight: 'bold',
+    },
+    moodText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    timestamp: {
+        fontSize: 14,
+        color: '#777',
+        marginTop: 4,
     },
 });
 
