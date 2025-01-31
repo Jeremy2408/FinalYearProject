@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { CalendarBody, CalendarContainer, CalendarHeader, DraggingEvent, DraggingEventProps, OnCreateEventResponse } from '@howljs/calendar-kit';
 import { View, Modal, TextInput, Button } from 'react-native';
+import DropDownPicker from 'react-native-dropdown-picker';
 import { collection, addDoc, getFirestore, getDocs } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
@@ -19,6 +20,14 @@ const Calendar = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventDetails, setNewEventDetails] = useState<OnCreateEventResponse | null>(null);
+  const [open, setOpen] = useState(false);
+
+  const [eventType, setEventType] = useState('academic'); 
+  const [items, setItems] = useState([
+    { label: 'Academic', value: 'academic' },
+    { label: 'Personal', value: 'personal' }
+  ]);
+
 
   const handleDragCreateStart = (start: OnCreateEventResponse) => {
     console.log("Started creating event at:", start);
@@ -33,12 +42,7 @@ const Calendar = () => {
   
 
   const getRandomColor = () => {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
+    return eventType === 'academic' ? '#4285F4' : '#34A853'; 
   };
 
   const renderDraggingEvent = useCallback((props: DraggingEventProps) => {
@@ -91,6 +95,8 @@ const Calendar = () => {
       start: newEventDetails.start,
       end: newEventDetails.end,
       color: getRandomColor(),
+      type: eventType, 
+
     };
 
     const db = getFirestore();
@@ -101,6 +107,7 @@ const Calendar = () => {
       setEvents((prevEvents) => [...prevEvents, newEvent]); 
       setNewEventTitle('');
       setNewEventDetails(null);
+      setEventType('academic'); 
       setModalVisible(false);
     } catch (error) {
       console.error("Error saving event to Firestore:", error);
@@ -154,6 +161,19 @@ const Calendar = () => {
             onChangeText={setNewEventTitle}
             style={{ borderBottomWidth: 1, marginBottom: 20 }}
           />
+
+          <DropDownPicker
+            open={open}
+            value={eventType}
+            items={items}
+            setOpen={setOpen}
+            setValue={setEventType}
+            setItems={setItems}
+            containerStyle={{ height: 40, marginBottom: 20 }}
+            dropDownContainerStyle={{ backgroundColor: '#fafafa' }}
+          />
+
+
           <Button title="Create Event" onPress={addEvent} />
           <Button title="Cancel" onPress={() => setModalVisible(false)} />
 
