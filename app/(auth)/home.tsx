@@ -2,6 +2,7 @@ import { View, Text, Button } from "react-native";
 import { auth } from '@/FirebaseConfig';
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const getGreeting = () => {
     const hour = new Date().getHours();
@@ -30,6 +31,7 @@ const Page = () => {
     }, []);
 
     return (
+        <SafeAreaView>
         <View>
             <Text>{getGreeting()}, {user?.email}</Text>
             <Text style={{ fontStyle: 'italic', marginVertical: 10 }}>💡 {quote}</Text>
@@ -40,6 +42,7 @@ const Page = () => {
             <Button title="Sign Out" onPress={() => auth.signOut()} />
 
         </View>
+        </SafeAreaView>
     );
 };
 

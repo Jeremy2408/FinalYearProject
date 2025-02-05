@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ListRenderItem } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ListRenderItem, Pressable } from 'react-native';
 import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
 import { FIREBASE_APP } from '@/FirebaseConfig';
 import { getAuth } from 'firebase/auth';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 
 interface MoodLog {
     id: string;
@@ -55,14 +57,16 @@ const MoodHistory = () => {
     );
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
+        <Pressable onPress={()=> router.back()}><Text>Go Back</Text></Pressable>
+            
             <Text style={styles.title}>Mood History</Text>
             <FlatList
                 data={moodLogs}
                 renderItem={renderItem}
                 keyExtractor={item => item.id}
             />
-        </View>
+        </SafeAreaView>
     );
 };
 

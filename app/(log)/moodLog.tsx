@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert, Pressable } from 'react-native';
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
 import { FIREBASE_APP } from '@/FirebaseConfig';
 import { getAuth } from 'firebase/auth';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const MoodLog = () => {
     const [mood, setMood] = useState('');
@@ -34,7 +35,10 @@ const MoodLog = () => {
     };
 
     return (
-        <View style={styles.container}>
+        
+        <SafeAreaView style={styles.container}>
+            <Pressable onPress={()=> router.back()}><Text>Go Back</Text></Pressable>
+            
             <Text style={styles.title}>Log Your Mood</Text>
             <Text style={styles.subtitle}>Today is {getCurrentDay()}</Text>
             <TextInput
@@ -48,7 +52,7 @@ const MoodLog = () => {
             
             <Button title="Submit" onPress={handleSubmit} />
             <Button title="View Mood History" onPress={() => router.push('/(log)/moodHistory')} />
-        </View>
+        </SafeAreaView>
     );
 };
 

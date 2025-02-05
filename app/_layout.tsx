@@ -50,7 +50,10 @@ export default function RootLayout() {
     <Stack>
       <Stack.Screen name="index"  options={{headerShown:false}} />
       <Stack.Screen name="(auth)" options={{headerShown:false}} />
-
+      <Stack.Screen name="(chatroom)/chatRoom" options={{headerShown:false}} />
+      <Stack.Screen name="(log)" options={{ headerShown: false }} />
+      <Stack.Screen name="(timetable)" options={{ headerShown: false }} />
+      <Stack.Screen name="(chatbot)" options={{ headerShown: false }} />
     </Stack>
   );
 }

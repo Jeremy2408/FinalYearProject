@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet } from 'react-native';
 import { GiftedChat, IMessage } from 'react-native-gifted-chat';
 import { getAnonymousIdentifier } from '@/utils/anonymousIdentifier';
 import { fetchMessages, sendMessage } from '@/utils/chatService';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Text } from 'react-native';
+import { View } from 'react-native';
+import { router } from 'expo-router';
 
 const ChatroomScreen: React.FC = () => {
   const [messages, setMessages] = useState<IMessage[]>([]);
@@ -33,18 +37,23 @@ const ChatroomScreen: React.FC = () => {
   }, [anonymousId]);
 
   return (
+    <SafeAreaView style = {{flex: 1}}> 
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0} 
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0} 
     >
+      <Pressable onPress={()=> router.back()}><Text>Go Back</Text></Pressable>
+    
       <GiftedChat
         messages={messages}
         onSend={(messages) => onSend(messages)}
         user={{ _id: anonymousId, name: anonymousId }}
         keyboardShouldPersistTaps="handled" 
       />
+     
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

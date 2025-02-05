@@ -1,10 +1,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, StyleSheet, Button } from 'react-native';
+import { View, StyleSheet, Button, Pressable,Text } from 'react-native';
 import { GiftedChat, IMessage } from 'react-native-gifted-chat';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchOpenAIResponse } from '../../services/openaiService';
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
 import { FIREBASE_APP } from '@/FirebaseConfig';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 
 const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<IMessage[]>([]);
@@ -113,7 +115,11 @@ const Chatbot: React.FC = () => {
 
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style ={{flex: 1, backgroundColor: '#fff'}}>
+    <SafeAreaView style={styles.container}>
+
+      <Pressable onPress={()=> router.back()}><Text>Go Back</Text></Pressable>
+      
 
       <Button title="Clear Chat" onPress={clearChatCache} />
       <GiftedChat
@@ -127,7 +133,8 @@ const Chatbot: React.FC = () => {
         keyboardShouldPersistTaps="handled"
         isTyping={typing} 
       />
-    </View>
+    </SafeAreaView>
+    </SafeAreaView>
   );
 };
 
