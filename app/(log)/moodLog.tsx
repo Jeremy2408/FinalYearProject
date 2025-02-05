@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, Pressable } from 'react-native';
-import { getFirestore, collection, addDoc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, doc, setDoc } from 'firebase/firestore';
 import { FIREBASE_APP } from '@/FirebaseConfig';
 import { getAuth } from 'firebase/auth';
 import { useRouter } from 'expo-router';
@@ -19,15 +19,22 @@ const MoodLog = () => {
     };
 
     const handleSubmit = async () => {
+        if (!user) {
+            Alert.alert('Error', 'User not authenticated');
+            return;
+        }
+
         try {
-            await addDoc(collection(db, 'Moods'), {
+            const moodDocRef = doc(db, `users/${user.uid}/moods`, new Date().toISOString().split('T')[0]);
+
+            await setDoc(moodDocRef, {
                 mood: mood,
-                day: getCurrentDay(), 
+                day: getCurrentDay(),
                 timestamp: new Date(),
-                userId: user?.uid,
             });
+
             Alert.alert('Success', 'Mood submitted successfully');
-            setMood(''); 
+            setMood('');
         } catch (error) {
             console.error('Error adding document: ', error);
             Alert.alert('Error', 'Failed to submit mood');
