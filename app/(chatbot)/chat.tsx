@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, StyleSheet, Button, Pressable,Text } from 'react-native';
+import { View, StyleSheet, Pressable,Text } from 'react-native';
 import { GiftedChat, IMessage } from 'react-native-gifted-chat';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchOpenAIResponse } from '../../services/openaiService';
@@ -8,11 +8,14 @@ import { FIREBASE_APP } from '@/FirebaseConfig';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { getAuth } from 'firebase/auth';
+import { Menu, Divider, Button,IconButton } from 'react-native-paper';
+
 
 
 const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<IMessage[]>([]);
-  const [typing, setTyping] = useState(false); 
+  const [typing, setTyping] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const db = getFirestore(FIREBASE_APP);
   const auth = getAuth(FIREBASE_APP);
@@ -141,10 +144,47 @@ const Chatbot: React.FC = () => {
     <SafeAreaView edges={['bottom', 'left', 'right']} style ={{flex: 1, backgroundColor: '#fff'}}>
     <SafeAreaView style={styles.container}>
 
-      <Pressable onPress={()=> router.back()}><Text>Go Back</Text></Pressable>
-      
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Pressable onPress={() => router.back()}>
+          <Text>Go Back</Text>
+        </Pressable>
 
-      <Button title="Clear Chat" onPress={clearChatCache} />
+        <Menu
+          visible={menuVisible}
+          onDismiss={() => setMenuVisible(false)}
+          anchor={
+            <IconButton
+              icon="dots-vertical" 
+              size={30} 
+              iconColor="#007AFF" 
+              onPress={() => setMenuVisible(true)}
+              style={{ marginRight: -10 }} 
+            />
+          }
+          contentStyle={{
+            backgroundColor: '#F0F0F0',  
+            borderRadius: 12,           
+            elevation: 5,               
+          }}
+        >
+          <Menu.Item 
+            onPress={clearChatCache} 
+            title="Clear Chat"
+            titleStyle={{
+              fontSize: 16,
+              fontWeight: '500',
+              color: '#00000' 
+            }}
+            style={{
+              paddingVertical: 12,
+              paddingHorizontal: 16,
+            }}
+            leadingIcon="delete-outline" 
+          />
+
+</Menu>
+
+      </View>
       <GiftedChat
         messages={messages}
         onSend={(messages) => onSend(messages)}
