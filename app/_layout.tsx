@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { auth } from '@/FirebaseConfig';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { View, ActivityIndicator } from "react-native";
+import { Provider as PaperProvider } from 'react-native-paper'; 
+
 
 export default function RootLayout() {
   const [initializing, setInitializing] = useState(true);
@@ -47,6 +49,7 @@ export default function RootLayout() {
     );
 
   return (
+    <PaperProvider>
     <Stack>
       <Stack.Screen name="index"  options={{headerShown:false}} />
       <Stack.Screen name="(auth)" options={{headerShown:false}} />
@@ -55,5 +58,7 @@ export default function RootLayout() {
       <Stack.Screen name="(timetable)" options={{ headerShown: false }} />
       <Stack.Screen name="(chatbot)" options={{ headerShown: false }} />
     </Stack>
+    </PaperProvider>
+  
   );
 }

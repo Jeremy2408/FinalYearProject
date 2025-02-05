@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Layout = () => {
   return (
