@@ -35,8 +35,8 @@ const MoodHistory = () => {
     useEffect(() => {
         const fetchMoodLogs = async () => {
             if (user) {
-                const q = query(collection(db, 'Moods'), where('userId', '==', user.uid));
-                const querySnapshot = await getDocs(q);
+                const moodCollectionRef = collection(db, `users/${user.uid}/moods`);
+                const querySnapshot = await getDocs(moodCollectionRef);
                 const logs = querySnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
