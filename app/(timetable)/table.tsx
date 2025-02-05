@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { CalendarBody, CalendarContainer, CalendarHeader, DraggingEvent, DraggingEventProps, OnCreateEventResponse } from '@howljs/calendar-kit';
-import { View, Modal, TextInput, Button } from 'react-native';
+import { View, Modal, TextInput, Button, SafeAreaView, Pressable, Text } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { collection, addDoc, getFirestore, getDocs } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { router } from 'expo-router';
 
 const Calendar = () => {
   const [events, setEvents] = useState([
@@ -184,6 +185,9 @@ const Calendar = () => {
 
 
   return (
+    <SafeAreaView style={{ flex: 1 }}>
+  <Pressable onPress={()=> router.back()}><Text>Go Back</Text></Pressable>
+
     <>
       <CalendarContainer
         allowDragToEdit={true}
@@ -201,6 +205,8 @@ const Calendar = () => {
       </CalendarContainer>
       {renderTitleModal()}
     </>
+    </SafeAreaView>
+
     
     
   );
