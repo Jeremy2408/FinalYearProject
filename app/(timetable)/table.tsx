@@ -186,7 +186,7 @@ const Calendar = () => {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-  <Pressable onPress={()=> router.back()}><Text>Go Back</Text></Pressable>
+    <Pressable onPress={()=> router.back()}><Text>Go Back</Text></Pressable>
 
     <>
       <CalendarContainer
