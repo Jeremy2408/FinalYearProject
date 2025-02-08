@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { CalendarBody, CalendarContainer, CalendarHeader, DraggingEvent, DraggingEventProps, OnCreateEventResponse } from '@howljs/calendar-kit';
-import { View, Modal, TextInput, Button, SafeAreaView, Pressable, Text } from 'react-native';
+import { CalendarBody, CalendarContainer, CalendarHeader, DraggingEvent, DraggingEventProps, OnCreateEventResponse, PackedEvent, SizeAnimation } from '@howljs/calendar-kit';
+import { View, Modal, TextInput, Button, SafeAreaView, Pressable, Text, Alert, TouchableOpacity } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
-import { collection, addDoc, getFirestore, getDocs } from 'firebase/firestore';
+import { collection, addDoc, getFirestore, getDocs,deleteDoc,doc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
 
@@ -147,6 +147,52 @@ const Calendar = () => {
     fetchEvents();
   }, []);
 
+  const deleteEvent = async (eventId: string) => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+  
+    if (!user) {
+      console.error("User not authenticated");
+      return;
+    }
+  
+    const db = getFirestore();
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'events', eventId));
+  
+      setEvents((prevEvents) => prevEvents.filter(event => event.id !== eventId));
+    } catch (error) {
+      console.error("Error deleting event:", error);
+    }
+  };
+
+  const handleLongPress = (eventId: string) => {
+    Alert.alert(
+      "Delete Event",
+      "Are you sure you want to delete this event?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: () => deleteEvent(eventId) }
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const renderEvent = (event: PackedEvent, size: SizeAnimation) => {
+    return (
+      <TouchableOpacity onLongPress={() => handleLongPress(event.id)}>
+        <View style={{ padding: 3, backgroundColor: event.color, borderRadius: 5, width: '100%' }}>
+          <Text style={{ color: 'white', fontWeight: 'bold', textAlign: 'center', flexWrap: 'nowrap' }}>{event.title}</Text>
+          <Text style={{ color: 'white', textAlign: 'center', flexWrap: 'nowrap' }}>
+
+          </Text>
+          
+        </View>
+      </TouchableOpacity>
+    );
+  };
+  
+
   const renderTitleModal = () => (
     <Modal
       visible={isModalVisible}
@@ -201,7 +247,10 @@ const Calendar = () => {
         dragStep={15} 
       >
         <CalendarHeader />
-        <CalendarBody renderDraggingEvent={renderDraggingEvent} />
+        <CalendarBody renderDraggingEvent={renderDraggingEvent} 
+        renderEvent={renderEvent} 
+
+        />
       </CalendarContainer>
       {renderTitleModal()}
     </>
