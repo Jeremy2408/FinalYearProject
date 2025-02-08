@@ -3,7 +3,7 @@ import { auth } from '@/FirebaseConfig';
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
 import { Card } from 'react-native-paper'; 
 
 
@@ -28,7 +28,7 @@ const Page = () => {
     };
 
     useEffect(() => {
-        const fetchUpcomingEvents = async () => {
+        
             if (!user) return;
 
             const db = getFirestore();
@@ -42,22 +42,22 @@ const Page = () => {
                 where("start.dateTime", "<=", fiveDaysLater.toISOString())
             );
 
-            const querySnapshot = await getDocs(q);
-            const upcomingEvents: Event[] = querySnapshot.docs.map(doc => {
-                const data = doc.data() as Event;
-                return {
-                    id: doc.id,
-                    title: data.title,
-                    type: data.type || "Event",
-                    start: data.start
-                };
+            const unsubscribe = onSnapshot(q, (querySnapshot) => {
+                const upcomingEvents: Event[] = querySnapshot.docs.map(doc => {
+                    const data = doc.data() as Event;
+                    return {
+                        id: doc.id,
+                        title: data.title,
+                        type: data.type || "Event",
+                        start: data.start
+                    };
+                });
+    
+                setReminders(upcomingEvents);
             });
-
-            setReminders(upcomingEvents);
-        };
-
-        fetchUpcomingEvents();
-    }, []);
+    
+            return () => unsubscribe(); 
+        }, [user]);
 
     useEffect(() => {
         const fetchQuote = async () => {
