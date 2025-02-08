@@ -4,6 +4,8 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
+import { Card } from 'react-native-paper'; 
+
 
 interface Event {
     id: string;
@@ -83,9 +85,10 @@ const Page = () => {
                     reminders.map((event) => {
                         const eventDate = new Date(event.start.dateTime);
                         return (
-                            <Text key={event.id}>
-                                📌 {event.title} ({event.type}) on {eventDate.toLocaleDateString()} at {eventDate.toLocaleTimeString()}
-                            </Text>
+                            <Card key={event.id} style={{ margin: 10, padding: 10, backgroundColor: event.type === "exam" ? "#ffcccc" : event.type === "lecture" ? "#ccffcc" : "#cce5ff" }}>
+                            <Text style={{ fontWeight: "bold", fontSize: 16 }}>{event.title} ({event.type})</Text>
+                            <Text>{eventDate.toLocaleDateString()} at {eventDate.toLocaleTimeString()}</Text>
+                        </Card>
                         );
                     })
                 ) : (
