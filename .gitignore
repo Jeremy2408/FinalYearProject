@@ -41,3 +41,6 @@ venv/
 backend/venv/
 backend/venv/*
 backend/glove.6B.100d.txt
+
+#
+.env
