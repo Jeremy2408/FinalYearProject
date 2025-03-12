@@ -69,7 +69,7 @@ model.compile(
     metrics=["accuracy"]
 )
 
-# Train Model 
+ # Train Model 
 history = model.fit(
     X_train, y_train_labels,
     epochs=15,  
