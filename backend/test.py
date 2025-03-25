@@ -3,7 +3,25 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 import numpy as np
 import pickle
 import pandas as pd
+import openai
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+
+openai.api_key =  os.getenv("OPEN_AI_KEY")  
+
+def is_neutral(text):
+    response = openai.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are an emotion detector. Only reply with 'Neutral' or 'Emotional'."},
+            {"role": "user", "content": f"Is this sentence emotionally neutral?\n\n\"{text}\""}
+        ]
+    )
+    reply = response.choices[0].message.content.strip().lower()
+
+    return "neutral" in reply
 custom_objects = {"mse": tf.keras.losses.MeanSquaredError()}
 
 model = tf.keras.models.load_model("sentiment_analysis_model.h5", custom_objects=custom_objects)
@@ -48,9 +66,15 @@ test_inputs = [
     "I'm so shocked about the news",
     "I failed my exams and i am so sad", 
     "I've passed my exams",
+    "I'm fine",
+    "I had an ok day",
 ]
 
 for text in test_inputs:
-    emotion = predict_emotion(text)
+    if is_neutral(text):
+        predicted_emotion = "neutral"
+    else:
+        predicted_emotion = predict_emotion(text)
+
     print(f"Input: {text}")
-    print(f"Predicted Emotion: {emotion}\n")
+    print(f"Predicted Emotion: {predicted_emotion}\n")
