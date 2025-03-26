@@ -10,6 +10,7 @@ interface MoodLog {
     id: string;
     day: string;
     mood: string;
+    emotion: string;
     timestamp: {
         seconds: number;
         nanoseconds: number;
@@ -52,6 +53,8 @@ const MoodHistory = () => {
         <View style={styles.logItem}>
             <Text style={styles.logText}>Day: {item.day}</Text>
             <Text style={styles.moodText}>Mood: {item.mood}</Text>
+            <Text style={styles.emotion}>Emotion: {item.emotion}</Text>
+
             <Text style={styles.timestamp}>{getRelativeTime(item.timestamp)}</Text>
         </View>
     );
@@ -107,6 +110,11 @@ const styles = StyleSheet.create({
         color: '#777',
         marginTop: 4,
     },
+    emotion: {
+        fontSize: 16,
+        marginTop: 5,
+        fontStyle: 'italic',
+      },
 });
 
 export default MoodHistory;
