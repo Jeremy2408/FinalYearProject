@@ -6,6 +6,11 @@ import pandas as pd
 import openai
 from dotenv import load_dotenv
 import os
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
 
 load_dotenv()
 
@@ -78,3 +83,21 @@ for text in test_inputs:
 
     print(f"Input: {text}")
     print(f"Predicted Emotion: {predicted_emotion}\n")
+
+class TextRequest(BaseModel):
+    text: str
+
+@app.post("/predict")
+async def predict(request: TextRequest):
+    text = request.text
+
+    if is_neutral(text):
+        print(f"Input: {text}")
+        print("Predicted Emotion: neutral \n")
+        return {"emotion": "neutral"}
+
+    emotion = predict_emotion(text)
+    print(f"Input: {text}")
+    print(f"Predicted Emotion: {emotion}\n")
+    return {"emotion": emotion}
+
