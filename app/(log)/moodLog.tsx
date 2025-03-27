@@ -9,6 +9,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const MoodLog = () => {
     const [mood, setMood] = useState('');
     const [submittedMood, setSubmittedMood] = useState(''); 
+    const [numericScore, setNumericScore] = useState<number>(0);
+
 
     const [submittedEmotion, setSubmittedEmotion] = useState('');
 
@@ -44,9 +46,13 @@ const MoodLog = () => {
     
             const data = await response.json();
             const emotion = data.emotion || "unknown";
+            const numericScore = data.numeric_sentiment_score || 0;
+            
             setSubmittedMood(mood); 
             setSubmittedEmotion(emotion);
             setMood('');
+            setNumericScore(numericScore);
+
 
 
 
@@ -60,6 +66,7 @@ const MoodLog = () => {
             await setDoc(moodDocRef, {
                 mood: mood,
                 emotion: emotion,
+                numericSentimentScore: numericScore,  
                 day: getCurrentDay(),
                 timestamp: new Date(),
             });
@@ -92,6 +99,8 @@ const MoodLog = () => {
                 <View style={styles.resultBox}>
                     <Text style={styles.resultText}>Submitted Mood: {submittedMood}</Text>
                     <Text style={styles.resultText}>Detected Emotion: {submittedEmotion}</Text>
+                    <Text style={styles.resultText}>Sentiment Score: {numericScore > 0 ? '+' : ''}{numericScore}</Text>
+
                 </View>
             )}
 

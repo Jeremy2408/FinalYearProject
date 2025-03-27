@@ -84,6 +84,28 @@ for text in test_inputs:
     print(f"Input: {text}")
     print(f"Predicted Emotion: {predicted_emotion}\n")
 
+def get_openai_sentiment_score(text):
+    response = openai.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": (
+                "You analyze sentences and assign sentiment scores."
+                "Provide only a numerical sentiment score from -1.0 (extremely negative) "
+                "to 0.0 (neutral) to 1.0 (extremely positive), with two decimal points."
+                "No explanations, only the number."
+            )},
+            {"role": "user", "content": f"Analyze sentiment numerically:\n\n\"{text}\""}
+        ]
+    )
+    reply = response.choices[0].message.content.strip()
+
+    try:
+        score = float(reply)
+    except ValueError:
+        score = 0.0
+
+    return score
+
 class TextRequest(BaseModel):
     text: str
 
@@ -92,12 +114,14 @@ async def predict(request: TextRequest):
     text = request.text
 
     if is_neutral(text):
-        print(f"Input: {text}")
-        print("Predicted Emotion: neutral \n")
-        return {"emotion": "neutral"}
+        emotion_label = "neutral"
+    else:
+        emotion_label = predict_emotion(text)
 
-    emotion = predict_emotion(text)
-    print(f"Input: {text}")
-    print(f"Predicted Emotion: {emotion}\n")
-    return {"emotion": emotion}
+    numeric_sentiment_score = get_openai_sentiment_score(text)
+
+    return {
+        "emotion": emotion_label,
+        "numeric_sentiment_score": numeric_sentiment_score
+    }
 
