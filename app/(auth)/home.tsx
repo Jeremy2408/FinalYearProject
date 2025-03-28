@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getFirestore, collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
 import { Card } from 'react-native-paper'; 
+import { useWeeklyMoodData } from '../hooks/useMoodData';
 
 
 interface Event {
@@ -19,6 +20,9 @@ const Page = () => {
     const [quote, setQuote] = useState("Fetching your daily quote...");
     const user = auth.currentUser;
     const router = useRouter();
+    const [averageScore, setAverageScore] = useState<number | null>(null);
+    const [moodLabel, setMoodLabel] = useState('');
+    const weeklyData = useWeeklyMoodData();
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -26,6 +30,18 @@ const Page = () => {
         if (hour < 18) return 'Good Afternoon';
         return 'Good Evening';
     };
+
+    useEffect(() => {
+        if (weeklyData.length > 0) {
+            const scores = weeklyData.map(item => item.score);
+            const avg = scores.reduce((sum, val) => sum + val, 0) / scores.length;
+            setAverageScore(parseFloat(avg.toFixed(2)));
+
+            if (avg > 0.2) setMoodLabel('Mostly Positive');
+            else if (avg < -0.2) setMoodLabel('Mostly Negative');
+            else setMoodLabel('Neutral');
+        }
+    }, [weeklyData]);
 
     useEffect(() => {
         
@@ -94,6 +110,17 @@ const Page = () => {
                 ) : (
                     <Text>No upcoming events in the next 5 days.</Text>
                 )}
+
+                <View style={{ backgroundColor: '#f0f4ff', padding: 16, borderRadius: 12, marginBottom: 10 }}>
+                    <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 4 }}> Weekly Mood Summary</Text>
+                    {averageScore !== null ? (
+                        <Text style={{ fontSize: 16 }}>
+                            This week: Average Score {averageScore > 0 ? '+' : ''}{averageScore} — {moodLabel}
+                        </Text>
+                    ) : (
+                        <Text style={{ fontSize: 16 }}>No mood data yet this week.</Text>
+                    )}
+                </View>
 
                 <Button title="Go to Mood Log" onPress={() => router.push('/(log)/moodLog')} />
                 <Button title="View Mood Analytics" onPress={() => router.push('/(analytics)/moodAnalytics')} />
