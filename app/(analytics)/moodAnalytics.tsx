@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Dimensions, StyleSheet, Pressable, Button } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useWeeklyMoodData, useMonthlyMoodData, useDailyMoodData } from './useMoodData';
+import { useWeeklyMoodData, useMonthlyMoodData, useDailyMoodData } from '../hooks/useMoodData';
 import { router } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -42,6 +42,18 @@ const MoodAnalytics = () => {
   const dataPoints = moodData.map(item => item.score);
   const validData = dataPoints.every(point => !isNaN(point));
 
+  const average = dataPoints.length
+    ? (dataPoints.reduce((sum, val) => sum + val, 0) / dataPoints.length).toFixed(2)
+    : 'N/A';
+
+  let moodLabel = '';
+  const avgNum = parseFloat(average);
+  if (!isNaN(avgNum)) {
+    if (avgNum > 0.2) moodLabel = 'Mostly Positive';
+    else if (avgNum < -0.2) moodLabel = 'Mostly Negative';
+    else moodLabel = 'Neutral';
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <Pressable onPress={() => router.back()}><Text>Go Back</Text></Pressable>
@@ -53,7 +65,15 @@ const MoodAnalytics = () => {
         <Button title="Monthly" onPress={() => setViewMode('monthly')} />
       </View>
 
-      <Button title="Export CSV Report" onPress={() => exportMoodDataAsCSV(moodData)} />
+      {average !== 'N/A' && (
+        <View style={styles.summaryBox}>
+          <Text style={styles.summaryTitle}> {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)} Summary</Text>
+          <Text style={styles.summaryText}>
+            Avg Score: {avgNum > 0 ? '+' : ''}{average} — {moodLabel}
+          </Text>
+        </View>
+      )}
+
 
       {validData && dataPoints.length > 0 ? (
         <LineChart
@@ -78,7 +98,10 @@ const MoodAnalytics = () => {
         />
       ) : (
         <Text>No valid mood data available yet.</Text>
-      )}
+      )}      
+      
+      <Button title="Export CSV Report" onPress={() => exportMoodDataAsCSV(moodData)} />
+
     </SafeAreaView>
   );
 };
@@ -103,6 +126,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     marginBottom: 16,
+  },
+  summaryBox: {
+    backgroundColor: '#f0f4ff',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 12,
+    width: '100%',
+  },
+  summaryTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  summaryText: {
+    fontSize: 15,
   },
 });
 
