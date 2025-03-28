@@ -4,6 +4,25 @@ import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useWeeklyMoodData, useMonthlyMoodData, useDailyMoodData } from './useMoodData';
 import { router } from 'expo-router';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+
+const exportMoodDataAsCSV = async (moodData: { label: string, score: number }[]) => {
+  const csvContent = [
+    'Date,Sentiment Score',
+    ...moodData.map(item => `${item.label},${item.score}`)
+  ].join('\n');
+
+  const fileUri = FileSystem.documentDirectory + 'mood-report.csv';
+  await FileSystem.writeAsStringAsync(fileUri, csvContent, { encoding: FileSystem.EncodingType.UTF8 });
+
+  const available = await Sharing.isAvailableAsync();
+  if (available) {
+    await Sharing.shareAsync(fileUri);
+  } else {
+    alert('Sharing is not available on this device');
+  }
+};
 
 const MoodAnalytics = () => {
   const [viewMode, setViewMode] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
@@ -33,6 +52,8 @@ const MoodAnalytics = () => {
         <Button title="Weekly" onPress={() => setViewMode('weekly')} />
         <Button title="Monthly" onPress={() => setViewMode('monthly')} />
       </View>
+
+      <Button title="Export CSV Report" onPress={() => exportMoodDataAsCSV(moodData)} />
 
       {validData && dataPoints.length > 0 ? (
         <LineChart
