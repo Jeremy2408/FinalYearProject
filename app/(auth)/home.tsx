@@ -3,7 +3,7 @@ import { auth } from '@/FirebaseConfig';
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getFirestore, collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, onSnapshot, orderBy, limit } from "firebase/firestore";
 import { Card } from 'react-native-paper'; 
 import { useWeeklyMoodData } from '../hooks/useMoodData';
 
@@ -14,6 +14,12 @@ interface Event {
     type: string; 
     start: { dateTime: string };
 }
+interface MoodLog {
+    mood: string;
+    emotion: string;
+    numericSentimentScore: number;
+    timestamp: { seconds: number; nanoseconds: number; };
+}
 
 const Page = () => {
     const [reminders, setReminders] = useState<Event[]>([]);
@@ -22,6 +28,7 @@ const Page = () => {
     const router = useRouter();
     const [averageScore, setAverageScore] = useState<number | null>(null);
     const [moodLabel, setMoodLabel] = useState('');
+    const [recentMood, setRecentMood] = useState<MoodLog | null>(null);
     const weeklyData = useWeeklyMoodData();
 
     const getGreeting = () => {
@@ -42,6 +49,24 @@ const Page = () => {
             else setMoodLabel('Neutral');
         }
     }, [weeklyData]);
+
+    useEffect(() => {
+        if (!user) return;
+
+        const db = getFirestore();
+        const moodsRef = collection(db, `users/${user.uid}/moods`);
+        const q = query(moodsRef, orderBy("timestamp", "desc"), limit(1));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            if (!snapshot.empty) {
+                const data = snapshot.docs[0].data() as MoodLog;
+                setRecentMood(data);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [user]);
+
 
     useEffect(() => {
         
@@ -95,6 +120,7 @@ const Page = () => {
                 <Text>{getGreeting()}, {user?.email}</Text>
 
                 <Text style={{ fontStyle: 'italic', marginVertical: 10 }}>💡 {quote}</Text>
+                
 
                 <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 10 }}>🔔 Upcoming Events:</Text>
                 {reminders.length > 0 ? (
@@ -109,6 +135,15 @@ const Page = () => {
                     })
                 ) : (
                     <Text>No upcoming events in the next 5 days.</Text>
+                )}
+
+                {recentMood && (
+                    <View style={{ backgroundColor: '#e0f7fa', padding: 14, borderRadius: 12, marginBottom: 10 }}>
+                        <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 4 }}> Most Recent Mood</Text>
+                        <Text>Mood: {recentMood.mood}</Text>
+                        <Text>Emotion: {recentMood.emotion}</Text>
+                        <Text>Score: {recentMood.numericSentimentScore > 0 ? '+' : ''}{recentMood.numericSentimentScore.toFixed(2)}</Text>
+                    </View>
                 )}
 
                 <View style={{ backgroundColor: '#f0f4ff', padding: 16, borderRadius: 12, marginBottom: 10 }}>

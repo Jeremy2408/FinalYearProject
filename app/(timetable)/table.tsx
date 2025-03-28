@@ -236,7 +236,7 @@ const Calendar = () => {
 
     <>
       <CalendarContainer
-        allowDragToEdit={true}
+        allowDragToEdit={false}
         allowPinchToZoom={true}
         minTimeIntervalHeight={30}
         allowDragToCreate={true}
