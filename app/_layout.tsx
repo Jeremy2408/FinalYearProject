@@ -58,6 +58,9 @@ export default function RootLayout() {
       <Stack.Screen name="(timetable)" options={{ headerShown: false }} />
       <Stack.Screen name="(chatbot)" options={{ headerShown: false }} />
       <Stack.Screen name="(analytics)/moodAnalytics" options={{ headerShown: false }} />
+      
+
+
     </Stack>
     </PaperProvider>
   
