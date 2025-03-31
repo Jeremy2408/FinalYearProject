@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
 import { Stack } from 'expo-router';
 
 const Layout = () => {
   return (
+<SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
     
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -12,9 +13,11 @@ const Layout = () => {
     >
       <Stack>
         <Stack.Screen name="chat" options={{ headerShown: false }} />
-        
+        <Stack.Screen name="chatHistory" options={{ headerShown: false }} />
+        <Stack.Screen name="chatHistoryView" options={{ headerShown: false }} />
       </Stack>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

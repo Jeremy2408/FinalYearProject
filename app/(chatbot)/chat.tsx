@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, StyleSheet, Pressable,Text } from 'react-native';
+import { View, StyleSheet, Pressable, Text } from 'react-native';
 import { GiftedChat, IMessage } from 'react-native-gifted-chat';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchOpenAIResponse } from '../../services/openaiService';
@@ -8,9 +8,7 @@ import { FIREBASE_APP } from '@/FirebaseConfig';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { getAuth } from 'firebase/auth';
-import { Menu, Divider, Button,IconButton } from 'react-native-paper';
-
-
+import { Menu, Divider, Button, IconButton } from 'react-native-paper';
 
 const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<IMessage[]>([]);
@@ -51,7 +49,7 @@ const Chatbot: React.FC = () => {
 
   const clearChatCache = async () => {
     try {
-      await AsyncStorage.removeItem('chat_messages'); 
+      await AsyncStorage.removeItem('chat_messages');
       setMessages([
         {
           _id: 1,
@@ -63,7 +61,7 @@ const Chatbot: React.FC = () => {
             avatar: 'https://placeimg.com/140/140/any',
           },
         },
-      ]); 
+      ]);
     } catch (error) {
       console.error('Error clearing chat cache:', error);
     }
@@ -76,19 +74,16 @@ const Chatbot: React.FC = () => {
     }
     setMessages(previousMessages =>
       GiftedChat.append(previousMessages, newMessages)
-  );
-    
+    );
 
     const userMessage = newMessages[0]?.text;
-
     if (!userMessage) return;
 
     try {
-
       setTyping(true);
 
       const timestamp = new Date();
-      const timestampStr = timestamp.toISOString().replace(/[-:.TZ]/g, ''); 
+      const timestampStr = timestamp.toISOString().replace(/[-:.TZ]/g, '');
       const messageId = `${user.uid}_${timestampStr}`;
 
       await setDoc(doc(db, `users/${user.uid}/chats`, messageId), {
@@ -96,9 +91,6 @@ const Chatbot: React.FC = () => {
         ...newMessages[0],
         createdAt: timestamp,
       });
-
-
-
 
       const botResponse = await fetchOpenAIResponse(userMessage);
       const botMessage: IMessage = {
@@ -126,77 +118,72 @@ const Chatbot: React.FC = () => {
         createdAt: new Date(),
       });
 
-
       AsyncStorage.setItem('chat_messages', JSON.stringify([...messages, botMessage])).catch(error =>
         console.error('Error saving messages to AsyncStorage:', error)
       );
-
-
     } catch (error) {
       console.error('Error sending message:', error);
-    }finally {
+    } finally {
       setTyping(false);
     }
   }, []);
 
-
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style ={{flex: 1, backgroundColor: '#fff'}}>
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: '#fff' }}>
+      <SafeAreaView style={styles.container}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Pressable onPress={() => router.back()}>
+            <Text>Go Back</Text>
+          </Pressable>
 
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Pressable onPress={() => router.back()}>
-          <Text>Go Back</Text>
-        </Pressable>
-
-        <Menu
-          visible={menuVisible}
-          onDismiss={() => setMenuVisible(false)}
-          anchor={
-            <IconButton
-              icon="dots-vertical" 
-              size={30} 
-              iconColor="#007AFF" 
-              onPress={() => setMenuVisible(true)}
-              style={{ marginRight: -10 }} 
+          <Menu
+            visible={menuVisible}
+            onDismiss={() => setMenuVisible(false)}
+            anchor={
+              <IconButton
+                icon="dots-vertical"
+                size={30}
+                iconColor="#007AFF"
+                onPress={() => setMenuVisible(true)}
+                style={{ marginRight: -10 }}
+              />
+            }
+            contentStyle={{
+              backgroundColor: '#F0F0F0',
+              borderRadius: 12,
+              elevation: 5,
+            }}
+          >
+            <Menu.Item
+              onPress={clearChatCache}
+              title="Clear Chat"
+              titleStyle={{ fontSize: 16, fontWeight: '500', color: '#000000' }}
+              style={{ paddingVertical: 12, paddingHorizontal: 16 }}
+              leadingIcon="delete-outline"
             />
-          }
-          contentStyle={{
-            backgroundColor: '#F0F0F0',  
-            borderRadius: 12,           
-            elevation: 5,               
-          }}
-        >
-          <Menu.Item 
-            onPress={clearChatCache} 
-            title="Clear Chat"
-            titleStyle={{
-              fontSize: 16,
-              fontWeight: '500',
-              color: '#00000' 
-            }}
-            style={{
-              paddingVertical: 12,
-              paddingHorizontal: 16,
-            }}
-            leadingIcon="delete-outline" 
-          />
+            <Menu.Item
+              onPress={() => {
+                setMenuVisible(false);
+                router.push('/(chatbot)/chatHistory');
+              }}
+              title="View Previous Conversations"
+              titleStyle={{ fontSize: 16, fontWeight: '500', color: '#000000' }}
+              style={{ paddingVertical: 12, paddingHorizontal: 16 }}
+              leadingIcon="history"
+            />
+          </Menu>
+        </View>
 
-</Menu>
-
-      </View>
-      <GiftedChat
-        messages={messages}
-        onSend={(messages) => onSend(messages)}
-        user={{
-          _id: 1,
-        }}
-        minComposerHeight={40}
-        maxComposerHeight={80}
-        keyboardShouldPersistTaps="handled"
-        isTyping={typing} 
-      />
-    </SafeAreaView>
+        <GiftedChat
+          messages={messages}
+          onSend={(messages) => onSend(messages)}
+          user={{ _id: 1 }}
+          minComposerHeight={40}
+          maxComposerHeight={80}
+          keyboardShouldPersistTaps="handled"
+          isTyping={typing}
+        />
+      </SafeAreaView>
     </SafeAreaView>
   );
 };
