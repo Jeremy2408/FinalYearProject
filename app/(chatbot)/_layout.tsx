@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 
 const Layout = () => {
   return (
-<SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+<SafeAreaView edges={['left', 'right', 'bottom']} style={{ flex: 1 }}>
     
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -15,6 +16,7 @@ const Layout = () => {
         <Stack.Screen name="chat" options={{ headerShown: false }} />
         <Stack.Screen name="chatHistory" options={{ headerShown: false }} />
         <Stack.Screen name="chatHistoryView" options={{ headerShown: false }} />
+
       </Stack>
     </KeyboardAvoidingView>
     </SafeAreaView>
