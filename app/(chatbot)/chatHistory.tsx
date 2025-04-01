@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
+import { View, StyleSheet, Pressable, Text, FlatList } from 'react-native';
 import { getFirestore, collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { auth } from '@/FirebaseConfig';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface ChatMessage {
   _id: string;
@@ -50,12 +51,14 @@ const ChatHistory = () => {
   }, [user]);
 
   return (
-    <View style={styles.container}>
-        <Pressable onPress={() => router.back()}>
-                <Text>Go Back</Text>
-                </Pressable>
-                
-      <Text style={styles.title}> Chat History</Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+      <Pressable onPress={() => router.back()}>
+        <Text>Go Back</Text>
+        </Pressable>
+        <Text style={styles.title}>Chat History</Text>
+      </View>
+
       <FlatList
         data={groupedChats}
         keyExtractor={(item) => item.date}
@@ -63,31 +66,38 @@ const ChatHistory = () => {
           <Pressable
             style={styles.chatCard}
             onPress={() =>
-                router.push({
-                  pathname: '/(chatbot)/chatHistoryView',
-                  params: { date: item.date as string }
-                })
-              }
-                        >
+              router.push({
+                pathname: '/(chatbot)/chatHistoryView',
+                params: { date: item.date as string }
+              })
+            }
+          >
             <Text style={styles.chatDate}>{item.date}</Text>
             <Text numberOfLines={1} style={styles.preview}>{item.messages[0]?.text}</Text>
           </Pressable>
         )}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#fff',
+    paddingHorizontal: 16,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+  },
+
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 16,
+    color: '#333',
   },
   chatCard: {
     padding: 12,
