@@ -13,7 +13,7 @@ label_to_score = {
     "love": 2,
     "surprise": 3,
     "neutral": 4,
-    "sadness": 5,
+    "sad": 5,
     "fear": 6,
     "anger": 7
 }
