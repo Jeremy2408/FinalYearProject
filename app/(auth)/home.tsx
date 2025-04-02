@@ -3,7 +3,7 @@ import { auth } from '@/FirebaseConfig';
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getFirestore, collection, query, where, getDocs, onSnapshot, orderBy, limit } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, onSnapshot, orderBy, limit, setDoc, doc, getDoc } from "firebase/firestore";
 import { Card } from 'react-native-paper'; 
 import { useWeeklyMoodData } from '../hooks/useMoodData';
 
@@ -30,6 +30,9 @@ const Page = () => {
     const [moodLabel, setMoodLabel] = useState('');
     const [recentMood, setRecentMood] = useState<MoodLog | null>(null);
     const weeklyData = useWeeklyMoodData();
+    const [stabilityData, setStabilityData] = useState<{ stability_index: number, burnout_risk: string } | null>(null);
+    const [esiLoading, setEsiLoading] = useState(true);
+
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -37,6 +40,76 @@ const Page = () => {
         if (hour < 18) return 'Good Afternoon';
         return 'Good Evening';
     };
+    useEffect(() => {
+        if (!user) return;
+      
+        const fetchESI = async () => {
+          try {
+            const db = getFirestore();
+            const todayId = new Date().toISOString().split("T")[0];
+      
+            const esiRef = doc(db, `users/${user.uid}/esi_history/${todayId}`);
+            const esiDoc = await getDoc(esiRef);
+      
+            if (esiDoc.exists()) {
+                const docData = esiDoc.data();
+                if (
+                  docData &&
+                  typeof docData.stability_index === "number" &&
+                  typeof docData.burnout_risk === "string"
+                ) {
+                  setStabilityData({
+                    stability_index: docData.stability_index,
+                    burnout_risk: docData.burnout_risk
+                  });
+                }
+                setEsiLoading(false);
+                return;
+              }
+      
+            const moodsRef = collection(db, `users/${user.uid}/moods`);
+            const q = query(moodsRef, orderBy("timestamp", "desc"), limit(7));
+            const snapshot = await getDocs(q);
+      
+            const emotions = snapshot.docs
+              .map(doc => doc.data().emotion)
+              .filter(Boolean);
+      
+            if (emotions.length < 2) {
+              console.warn("Not enough valid emotion entries for ESI.");
+              setStabilityData(null);
+              return;
+            }
+      
+            const response = await fetch("http://localhost:8000/stability-index", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ emotions }),
+            });
+      
+            const data = await response.json();
+      
+            if (data.stability_index !== undefined && data.burnout_risk !== undefined) {
+              setStabilityData(data);
+              await setDoc(esiRef, {
+                stability_index: data.stability_index,
+                burnout_risk: data.burnout_risk,
+                calculated_at: new Date().toISOString()
+              });
+            } else {
+              console.warn("ESI response missing expected fields:", data);
+            }
+      
+          } catch (err) {
+            console.error("ESI fetch/store failed:", err);
+          } finally {
+            setEsiLoading(false);
+          }
+        };
+      
+        fetchESI();
+      }, [user]);
+         
 
     useEffect(() => {
         if (weeklyData.length > 0) {
@@ -145,6 +218,20 @@ const Page = () => {
                         <Text>Score: {recentMood.numericSentimentScore > 0 ? '+' : ''}{recentMood.numericSentimentScore.toFixed(2)}</Text>
                     </View>
                 )}
+                {!esiLoading && stabilityData && (
+                    <View style={{ backgroundColor: '#fff3e0', padding: 16, borderRadius: 12, marginBottom: 10 }}>
+                        <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 4 }}> Emotion Stability Index</Text>
+                        <Text>Stability Score: {stabilityData.stability_index.toFixed(2)}</Text>
+                        <Text>Burnout Risk: {stabilityData.burnout_risk}</Text>
+
+                        {stabilityData.burnout_risk === "High" && (
+                        <Text style={{ color: 'red', fontWeight: 'bold', marginTop: 4 }}>
+                        High risk of burnout — take a break or reflect today.
+                        </Text>
+                        )}
+                    </View>     
+                    )}
+
 
                 <View style={{ backgroundColor: '#f0f4ff', padding: 16, borderRadius: 12, marginBottom: 10 }}>
                     <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 4 }}> Weekly Mood Summary</Text>
