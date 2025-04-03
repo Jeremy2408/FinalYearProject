@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import { auth } from '@/FirebaseConfig';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { View, ActivityIndicator } from "react-native";
-import { Provider as PaperProvider } from 'react-native-paper'; 
+import { Provider as PaperProvider } from 'react-native-paper';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
+
 
 
 export default function RootLayout() {
@@ -16,6 +18,14 @@ export default function RootLayout() {
     const subscriber = onAuthStateChanged(auth, (user) => {
       console.log('onAuthStateChanged', user);
       setUser(user);
+
+      if (user?.email) {
+        const db = getFirestore();
+        const userRef = doc(db, `users/${user.uid}`);
+        setDoc(userRef, { email: user.email }, { merge: true });
+
+      }
+
       if (initializing) setInitializing(false);
     });
     return () => subscriber();
