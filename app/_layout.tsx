@@ -54,6 +54,11 @@ export default function RootLayout() {
       <Stack.Screen name="index"  options={{headerShown:false}} />
       <Stack.Screen name="(auth)" options={{headerShown:false}} />
       <Stack.Screen name="(chatroom)/chatRoom" options={{headerShown:false}} />
+      <Stack.Screen name="(chatroom)/chatRoomList" options={{headerShown:false}} />
+      <Stack.Screen name="(chatroom)/moduleChatList" options={{headerShown:false}} />
+      <Stack.Screen name="(chatroom)/moduleChatRoom" options={{headerShown:false}} />
+      <Stack.Screen name="(chatroom)/groupChatList" options={{headerShown:false}} />
+      <Stack.Screen name="(chatroom)/groupChatRoom" options={{headerShown:false}} />
       <Stack.Screen name="(log)" options={{ headerShown: false }} />
       <Stack.Screen name="(timetable)" options={{ headerShown: false }} />
       <Stack.Screen name="(chatbot)" options={{ headerShown: false }} />

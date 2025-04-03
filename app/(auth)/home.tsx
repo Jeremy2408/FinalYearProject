@@ -234,7 +234,7 @@ const Page = () => {
                 <Button title="View Mood Analytics" onPress={() => router.push('/(analytics)/moodAnalytics')} />
                 <Button title="Timetable" onPress={() => router.push('/(timetable)/table')} />
                 <Button title="Chatbot" onPress={() => router.push('/(chatbot)/chat')} />
-                <Button title="Go to Chatroom" onPress={() => router.push('/(chatroom)/chatRoom')} />
+                <Button title="Go to Chatrooms" onPress={() => router.push('/(chatroom)/chatRoomList')} />
                 <Button title="Sign Out" onPress={() => auth.signOut()} />
             </View>
         </SafeAreaView>
