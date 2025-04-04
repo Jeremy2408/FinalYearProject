@@ -1,0 +1,22 @@
+#  Ignore large pretrained embeddings
+glove.6B.*
+dataset/
+*.csv
+
+#  Ignore C++ source (compiled .so will be included)
+emotion_stability.cpp
+
+#  Ignore scripts not needed in production
+test.py
+training.py
+
+#  Ignore Python virtual environments
+venv/
+__pycache__/
+*.pyc
+
+#  Ignore IDE/workspace config
+*.ipynb
+*.log
+*.idea/
+.vscode/

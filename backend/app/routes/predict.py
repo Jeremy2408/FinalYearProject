@@ -65,9 +65,13 @@ async def predict(request: TextRequest):
     text = request.text
 
     if is_neutral(text):
-        emotion_label = "neutral"
+        emotion_label = "Neutral"
     else:
-        emotion_label = predict_emotion(text)
+        raw_label = predict_emotion(text)
+
+        emotion_label = raw_label.capitalize()
+        if emotion_label == "Suprise":
+            emotion_label = "Surprise"
 
     numeric_sentiment_score = get_openai_sentiment_score(text)
 
