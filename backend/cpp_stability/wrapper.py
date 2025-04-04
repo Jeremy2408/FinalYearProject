@@ -4,6 +4,8 @@ import numpy as np
 
 lib_path = os.path.join(os.path.dirname(__file__), "libemotion_stability.so")
 
+print("Resolved lib path:", lib_path)
+
 # Load the shared library
 lib = ctypes.CDLL(lib_path)
 
