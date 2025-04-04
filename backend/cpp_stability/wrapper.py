@@ -2,7 +2,7 @@ import ctypes
 import os
 import numpy as np
 
-lib_path = os.path.join(os.path.dirname(__file__), "libemotion_stability.dylib")
+lib_path = os.path.join(os.path.dirname(__file__), "libemotion_stability.so")
 
 # Load the shared library
 lib = ctypes.CDLL(lib_path)
