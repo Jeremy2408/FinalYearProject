@@ -1,6 +1,6 @@
 fastapi
 uvicorn[standard]
-tensorflow==2.12.0
+tensorflow==2.17.1
 numpy
 python-dotenv
 openai
