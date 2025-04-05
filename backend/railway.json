@@ -1,0 +1,18 @@
+{
+    "ignorePaths": [
+      "../app/**",
+      "../*.tsx",
+      "../*.ts",
+      "../*.js",
+      "../*.json",
+      "../*.md",
+      "../services/**",
+      "../assets/**",
+      "../node_modules/**",
+      "../.expo/**",
+      "../.vscode/**",
+      "../package.json",
+      "../yarn.lock"
+    ]
+  }
+  
