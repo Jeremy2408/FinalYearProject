@@ -36,7 +36,7 @@ const MoodLog = () => {
         }
     
         try {
-            const response = await fetch("http://localhost:8000/predict", {
+            const response = await fetch("http://finalyearproject-production-ddac.up.railway.app/predict", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
