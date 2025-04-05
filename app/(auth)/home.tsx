@@ -60,8 +60,8 @@ const Page = () => {
           }
       
           try {
-            const response = await fetch("http://localhost:8000/stability-index", {
-              method: "POST",
+            const response = await fetch("http://finalyearproject-production-ddac.up.railway.app/stability-index", {
+                method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ emotions }),
             });
