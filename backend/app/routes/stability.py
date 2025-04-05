@@ -29,7 +29,8 @@ def classify_burnout(score: float) -> str:
 @router.post("/stability-index")
 async def get_stability_index(log: EmotionLog):
     try:
-        scores = [label_to_score[label] for label in log.emotions]
+        normalized_emotions = [label.lower() for label in log.emotions]
+        scores = [label_to_score[label] for label in normalized_emotions]
     except KeyError as e:
         return {"error": f"Unsupported emotion label: {str(e)}"}
 
