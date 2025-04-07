@@ -5,4 +5,5 @@ numpy
 python-dotenv
 openai
 pydantic
+firebase-admin
 
