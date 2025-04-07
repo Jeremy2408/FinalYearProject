@@ -15,6 +15,7 @@ const GroupChatList = () => {
   const [inviteCanInvite, setInviteCanInvite] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState('');
   const [selectedGroupName, setSelectedGroupName] = useState('');
+  const [pendingInviteCount, setPendingInviteCount] = useState(0);
   const router = useRouter();
   const db = getFirestore();
   const user = auth.currentUser;
@@ -41,7 +42,15 @@ const GroupChatList = () => {
       setGroups(groupList);
     };
 
+    const fetchInvites = async () => {
+      if (!user) return;
+      const snapshot = await getDocs(collection(db, `users/${user.uid}/invitations`));
+      const pending = snapshot.docs.filter(doc => doc.data().status === 'pending');
+      setPendingInviteCount(pending.length);
+    };
+
     fetchUserGroups();
+    fetchInvites();
   }, [user]);
 
   const handleCreateGroup = async () => {
@@ -111,8 +120,15 @@ const GroupChatList = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-       <Pressable onPress={()=> router.back()}><Text>Go Back</Text></Pressable>
-      <Text style={styles.title}> Group Chatrooms</Text>
+      <Pressable onPress={() => router.back()}><Text>Go Back</Text></Pressable>
+      
+      <View style={styles.headerRow}>
+        
+        <Text style={styles.title}> Group Chatrooms</Text>
+        <Pressable onPress={() => router.push('/(chatroom)/groupInvites')}>
+          <Text style={styles.inviteLink}>View Invitations{pendingInviteCount > 0 ? ` (${pendingInviteCount})` : ''}</Text>
+        </Pressable>
+      </View>
 
       <Pressable style={styles.createButton} onPress={() => setModalVisible(true)}>
         <Text style={styles.createButtonText}>+ Create New Group</Text>
@@ -187,17 +203,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 16,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 12,
+  },
+  inviteLink: {
+    fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '500',
   },
   createButton: {
     backgroundColor: '#007AFF',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
-    marginBottom: 16,
+    marginVertical: 16,
   },
   createButtonText: {
     color: '#fff',
