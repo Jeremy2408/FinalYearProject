@@ -21,26 +21,49 @@ def send_deadline_reminders():
         group_id = event_data.get("linkedGroupChatId")
         group_name = event_data.get("linkedGroupChatName")
         due_date = event_data.get("dueDate")
-        chat_type = event_data.get("linkedGroupChatType", "group")
 
-        if not group_id or not due_date:
-            continue
-
-        if isinstance(due_date, dict) and "_seconds" in due_date:
+        if not due_date and "start" in event_data and "dateTime" in event_data["start"]:
+            try:
+                due_date_str = event_data["start"]["dateTime"]
+                due_datetime = datetime.fromisoformat(due_date_str.replace("Z", "+00:00")).replace(tzinfo=None)
+            except Exception as e:
+                print(f" Invalid start.dateTime format: {e}")
+                continue
+        elif isinstance(due_date, dict) and "_seconds" in due_date:
             due_datetime = datetime.utcfromtimestamp(due_date["_seconds"])
         elif hasattr(due_date, 'timestamp'):
-            due_datetime = due_date
+            due_datetime = due_date.replace(tzinfo=None)
         else:
+            print(" No valid due date found, skipping")
             continue
 
         if not now <= due_datetime <= upcoming_window:
+            print(f"⏩ Skipping event due {due_datetime}, outside reminder window")
             continue
+
+        chat_type = event_data.get("linkedGroupChatType")
+
+        group_chat_doc = db.collection("group_chatrooms").document(group_id).get()
+        module_chat_doc = db.collection("module_chatrooms").document(group_id).get()
+
+        if chat_type not in ["group", "module"]:
+            if group_chat_doc.exists:
+                chat_type = "group"
+            elif module_chat_doc.exists:
+                chat_type = "module"
+            else:
+                print(f" No valid chatroom found for {group_id}, skipping")
+                continue
+
+        chatroom_collection = "module_chatrooms" if chat_type == "module" else "group_chatrooms"
 
         reminder_id = f"{event_id}_{group_id}"
         reminder_doc = db.collection("group_reminders").document(reminder_id)
         if reminder_doc.get().exists:
-            continue  
-        chatroom_collection = "module_chatrooms" if chat_type == "module" else "group_chatrooms"
+            print(f" Reminder already sent for {reminder_id}, skipping")
+            continue
+
+        print(f" Sending reminder for '{event_data.get('title', 'Unnamed Task')}' to {chatroom_collection}/{group_id}")
 
         message_ref = db.collection(chatroom_collection).document(group_id).collection("messages")
         message_ref.add({
@@ -57,4 +80,5 @@ def send_deadline_reminders():
 
         reminders_sent += 1
 
+    print(f"✅Total reminders sent: {reminders_sent}")
     return {"reminders_sent": reminders_sent}
