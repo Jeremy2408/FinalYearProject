@@ -1,10 +1,9 @@
 from fastapi import APIRouter
-from firebase_admin import firestore
+from firebase_config import db
 from datetime import datetime, timedelta
 import uuid
 
 router = APIRouter()
-db = firestore.client()
 
 @router.get("/send-deadline-reminders")
 def send_deadline_reminders():
