@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from firebase_config import db
+from firebase_admin import firestore
 from datetime import datetime, timedelta
 import uuid
 
