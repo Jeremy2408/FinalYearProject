@@ -58,6 +58,7 @@ const MoodLog = () => {
             body: JSON.stringify({
               text: mood,
               linkedGroupMemberships: memberships,
+              userId: uid 
             }),
           });
       
