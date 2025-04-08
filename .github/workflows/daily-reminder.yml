@@ -1,0 +1,15 @@
+name: Daily Reminder Trigger
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # 9AM UTC = 10AM GMT
+  workflow_dispatch:     # Allows manual trigger via GitHub UI
+
+jobs:
+  trigger-reminder:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name:  Call Reminder Endpoint
+      run: |
+        curl -X GET https://finalyearproject-production-ddac.up.railway.app/send-deadline-reminders
