@@ -66,6 +66,8 @@ const GroupChatList = () => {
       name: roomName.trim(),
       createdBy: user?.uid,
       createdAt: serverTimestamp(),
+      members: [user?.uid], 
+
     });
 
     await setDoc(doc(db, `group_chatrooms/${groupId}/members/${user?.uid}`), {
@@ -120,7 +122,7 @@ const GroupChatList = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Pressable onPress={() => router.back()}><Text>Go Back</Text></Pressable>
+            <Pressable onPress={() => router.back()}><Text>Go Back</Text></Pressable>
       
       <View style={styles.headerRow}>
         

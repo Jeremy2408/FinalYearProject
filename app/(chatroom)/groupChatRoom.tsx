@@ -32,19 +32,29 @@ const GroupChatRoom = () => {
     const q = query(messagesRef, orderBy('createdAt', 'desc'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messagesFirestore = snapshot.docs.map(doc => {
-        const firebaseData = doc.data();
+      const userId = user?.uid;
 
-        const message: IMessage = {
-          _id: doc.id,
-          text: firebaseData.text,
-          createdAt: firebaseData.createdAt?.toDate() || new Date(),
-          user: firebaseData.user,
-        };
-        return message;
-      });
+    const messagesFirestore = snapshot.docs
+      .map(doc => {
+    const firebaseData = doc.data();
 
-      setMessages(messagesFirestore);
+    const message: IMessage = {
+      _id: doc.id,
+      text: firebaseData.text,
+      createdAt: firebaseData.createdAt?.toDate() || new Date(),
+      user: firebaseData.user,
+    };
+
+    if (firebaseData.hiddenFrom) {
+      (message as any).hiddenFrom = firebaseData.hiddenFrom;
+    }
+
+    return message;
+    })
+    .filter(msg => !(msg as any).hiddenFrom?.includes(userId));
+
+    setMessages(messagesFirestore);
+
     });
 
     return () => unsubscribe();
