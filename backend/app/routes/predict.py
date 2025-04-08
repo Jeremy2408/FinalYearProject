@@ -71,6 +71,10 @@ async def predict(request: TextRequest):
     linked_memberships = request.linkedGroupMemberships
     user_id = request.userId
 
+    print(" Request received:", text)
+    print(" User ID:", user_id)
+    print(" Group Memberships:", linked_memberships)
+
     if is_neutral(text):
         emotion_label = "Neutral"
     else:
@@ -79,9 +83,14 @@ async def predict(request: TextRequest):
         if emotion_label == "Suprise":
             emotion_label = "Surprise"
 
+    print("🎯 Emotion label:", emotion_label)
+
     numeric_sentiment_score = get_openai_sentiment_score(text)
 
     trigger_emotions = ["Sad", "Fear", "Anger"]
+    print(" Trigger check:", emotion_label in trigger_emotions)
+    print(" Group links present:", bool(linked_memberships))
+
     if emotion_label in trigger_emotions and linked_memberships:
         for membership in linked_memberships:
             chatroom_collection = "module_chatrooms" if membership.type == "module" else "group_chatrooms"
@@ -96,7 +105,7 @@ async def predict(request: TextRequest):
             }
 
             message_ref.add(system_message)
-            print(f" Sent wellness nudge to {chatroom_collection}/{membership.id} (hidden from {user_id})")
+            print(f"✅ Sent wellness nudge to {chatroom_collection}/{membership.id} (hidden from {user_id})")
 
     return {
         "emotion": emotion_label,
