@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, Pressable } from 'react-native';
-import { getFirestore, collection, addDoc, doc, setDoc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, doc, setDoc, query, getDocs, where } from 'firebase/firestore';
 import { FIREBASE_APP } from '@/FirebaseConfig';
 import { getAuth } from 'firebase/auth';
 import { useRouter } from 'expo-router';
@@ -23,61 +23,74 @@ const MoodLog = () => {
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         return days[new Date().getDay()];
     };
+    
 
     const handleSubmit = async () => {
         if (!user) {
-            Alert.alert('Error', 'User not authenticated');
-            return;
+          Alert.alert('Error', 'User not authenticated');
+          return;
         }
-    
+      
         if (!mood.trim()) {
-            Alert.alert('Error', 'Please enter how you feel.');
-            return;
+          Alert.alert('Error', 'Please enter how you feel.');
+          return;
         }
-    
+      
         try {
-            const response = await fetch("http://finalyearproject-production-ddac.up.railway.app/predict", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ text: mood }),
-            });
-    
-            const data = await response.json();
-            const emotion = data.emotion || "unknown";
-            const numericScore = data.numeric_sentiment_score || 0;
-            
-            setSubmittedMood(mood); 
-            setSubmittedEmotion(emotion);
-            setMood('');
-            setNumericScore(numericScore);
-
-
-
-
-    
-            const moodDocRef = doc(
-                db,
-                `users/${user.uid}/moods`,
-                new Date().toISOString().split("T")[0]
-            );
-    
-            await setDoc(moodDocRef, {
-                mood: mood,
-                emotion: emotion,
-                numericSentimentScore: numericScore,  
-                day: getCurrentDay(),
-                timestamp: new Date(),
-            });
-    
-            Alert.alert("Success", `Mood submitted.`);
-            setMood('');
+          const db = getFirestore();
+          const uid = user.uid;
+      
+          const memberships: { id: string; type: string }[] = [];
+      
+          const groupQuery = query(collection(db, 'group_chatrooms'), where('members', 'array-contains', uid));
+          const groupSnap = await getDocs(groupQuery);
+          groupSnap.forEach(doc => memberships.push({ id: doc.id, type: 'group' }));
+      
+          const moduleQuery = query(collection(db, 'module_chatrooms'), where('members', 'array-contains', uid));
+          const moduleSnap = await getDocs(moduleQuery);
+          moduleSnap.forEach(doc => memberships.push({ id: doc.id, type: 'module' }));
+      
+          const response = await fetch("http://finalyearproject-production-ddac.up.railway.app/predict", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              text: mood,
+              linkedGroupMemberships: memberships,
+            }),
+          });
+      
+          const data = await response.json();
+          const emotion = data.emotion || "unknown";
+          const numericScore = data.numeric_sentiment_score || 0;
+      
+          setSubmittedMood(mood);
+          setSubmittedEmotion(emotion);
+          setMood('');
+          setNumericScore(numericScore);
+      
+          const moodDocRef = doc(
+            db,
+            `users/${user.uid}/moods`,
+            new Date().toISOString().split("T")[0]
+          );
+      
+          await setDoc(moodDocRef, {
+            mood: mood,
+            emotion: emotion,
+            numericSentimentScore: numericScore,
+            day: getCurrentDay(),
+            timestamp: new Date(),
+          });
+      
+          Alert.alert("Success", `Mood submitted.`);
         } catch (error) {
-            console.error("Error adding document: ", error);
-            Alert.alert("Error", "Failed to submit mood");
+          console.error("Error adding document: ", error);
+          Alert.alert("Error", "Failed to submit mood");
         }
-    };
+      };
+      
     
 
     return (
