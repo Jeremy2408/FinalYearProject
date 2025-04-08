@@ -5,6 +5,8 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import { collection, addDoc, getFirestore, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
+import { RRule } from 'rrule';
+
 
 const Calendar = () => {
   const [events, setEvents] = useState([
@@ -30,6 +32,17 @@ const Calendar = () => {
   const [groupChats, setGroupChats] = useState<{ label: string; value: string }[]>([]);
   const [linkedGroup, setLinkedGroup] = useState<string>('');
   const [groupOpen, setGroupOpen] = useState(false);
+
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const weekDays = [
+    { label: 'Mon', value: 'MO' },
+    { label: 'Tue', value: 'TU' },
+    { label: 'Wed', value: 'WE' },
+    { label: 'Thu', value: 'TH' },
+    { label: 'Fri', value: 'FR' },
+    { label: 'Sat', value: 'SA' },
+    { label: 'Sun', value: 'SU' },
+  ];
 
   const handleDragCreateStart = (start: OnCreateEventResponse) => {
     console.log("Started creating event at:", start);
@@ -70,6 +83,10 @@ const Calendar = () => {
 
     const groupInfo = linkedGroup ? groupChats.find(g => g.value === linkedGroup) : null;
 
+    const recurrenceRule = selectedDays.length > 0
+      ? `RRULE:FREQ=WEEKLY;BYDAY=${selectedDays.join(',')}`
+      : '';
+
     const newEvent = {
       id: newEventId,
       title: newEventTitle || 'Untitled Event',
@@ -77,6 +94,7 @@ const Calendar = () => {
       end: newEventDetails.end,
       color: getRandomColor(),
       type: eventType,
+      ...(recurrenceRule && { recurrenceRule }),
       ...(groupInfo && {
         linkedGroupChatId: linkedGroup,
         linkedGroupChatName: groupInfo.label,
@@ -90,6 +108,7 @@ const Calendar = () => {
       setNewEventDetails(null);
       setEventType('academic');
       setLinkedGroup('');
+      setSelectedDays([]);
       setModalVisible(false);
     } catch (error) {
       console.error("Error saving event to Firestore:", error);
@@ -106,15 +125,42 @@ const Calendar = () => {
     const db = getFirestore();
     try {
       const querySnapshot = await getDocs(collection(db, 'users', user.uid, 'events'));
-      const userEvents = querySnapshot.docs.map((doc) => {
+      const userEvents: any[] = [];
+
+      querySnapshot.docs.forEach((doc) => {
         const data = doc.data();
-        return {
-          id: doc.id,
+        const baseEvent = {
           title: data.title,
-          start: data.start,
-          end: data.end,
           color: data.color,
+          type: data.type,
+          originalId: doc.id,
         };
+
+        if (data.recurrenceRule) {
+          const startDate = new Date(data.start.dateTime);
+          const endDate = new Date(data.end.dateTime);
+          const durationMs = endDate.getTime() - startDate.getTime();
+
+          const rule = RRule.fromString(data.recurrenceRule);
+          const occurrences = rule.between(new Date(), new Date(Date.now() + 1000 * 60 * 60 * 24 * 30));
+
+          occurrences.forEach((occurrence, idx) => {
+            userEvents.push({
+              ...baseEvent,
+              id: `${doc.id}_${idx}`,
+              start: { dateTime: occurrence.toISOString() },
+              end: { dateTime: new Date(occurrence.getTime() + durationMs).toISOString() },
+            });
+          });
+        } else {
+          userEvents.push({
+            id: doc.id,
+            title: data.title,
+            start: data.start,
+            end: data.end,
+            color: data.color,
+          });
+        }
       });
       setEvents(userEvents);
     } catch (error) {
@@ -138,15 +184,18 @@ const Calendar = () => {
     setGroupChats(options);
   };
 
-  const handleTypeOpen: React.Dispatch<React.SetStateAction<boolean>> = (o) => {
+  const handleTypeOpen = (o: React.SetStateAction<boolean>) => {
+    const value = typeof o === 'function' ? o(false) : o;
     setOpen(o);
-    if (o) setGroupOpen(false);
+    if (value) setGroupOpen(false);
   };
   
-  const handleGroupOpen: React.Dispatch<React.SetStateAction<boolean>> = (g) => {
+  const handleGroupOpen = (g: React.SetStateAction<boolean>) => {
+    const value = typeof g === 'function' ? g(false) : g;
     setGroupOpen(g);
-    if (g) setOpen(false);
+    if (value) setOpen(false);
   };
+  
   
 
   useEffect(() => {
@@ -161,14 +210,18 @@ const Calendar = () => {
       console.error("User not authenticated");
       return;
     }
+  
     const db = getFirestore();
+    const baseId = eventId.includes('_') ? eventId.split('_')[0] : eventId;
+  
     try {
-      await deleteDoc(doc(db, 'users', user.uid, 'events', eventId));
-      setEvents((prevEvents) => prevEvents.filter(event => event.id !== eventId));
+      await deleteDoc(doc(db, 'users', user.uid, 'events', baseId));
+      setEvents((prevEvents) => prevEvents.filter(event => !event.id.startsWith(baseId)));
     } catch (error) {
       console.error("Error deleting event:", error);
     }
   };
+  
 
   const handleLongPress = (eventId: string) => {
     Alert.alert(
@@ -226,12 +279,39 @@ const Calendar = () => {
               dropDownContainerStyle={{ backgroundColor: '#fafafa' }}
             />
           </View>
+
+          <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Repeat Weekly On:</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16 }}>
+            {weekDays.map((day) => (
+              <TouchableOpacity
+                key={day.value}
+                onPress={() => {
+                  setSelectedDays((prev) =>
+                    prev.includes(day.value)
+                      ? prev.filter((d) => d !== day.value)
+                      : [...prev, day.value]
+                  );
+                }}
+                style={{
+                  backgroundColor: selectedDays.includes(day.value) ? '#4285F4' : '#ccc',
+                  borderRadius: 20,
+                  paddingVertical: 6,
+                  paddingHorizontal: 12,
+                  margin: 4,
+                }}
+              >
+                <Text style={{ color: 'white' }}>{day.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
           <Button title="Create Event" onPress={addEvent} />
           <Button title="Cancel" onPress={() => setModalVisible(false)} />
         </View>
       </View>
     </Modal>
   );
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Pressable onPress={() => router.back()}><Text>Go Back</Text></Pressable>
