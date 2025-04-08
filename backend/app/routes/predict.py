@@ -15,10 +15,14 @@ router = APIRouter()
 load_dotenv()
 openai.api_key = os.getenv("OPEN_AI_KEY")
 
+class GroupMembership(BaseModel):
+    id: str
+    type: str
+
 class TextRequest(BaseModel):
     text: str
-    linkedGroupChatId: str = None
-    linkedGroupChatType: str = None
+    linkedGroupMemberships: list[GroupMembership] = []
+    userId: str = None
 
 def is_neutral(text):
     response = openai.chat.completions.create(
@@ -64,8 +68,8 @@ def predict_emotion(text):
 @router.post("/predict")
 async def predict(request: TextRequest):
     text = request.text
-    linked_group_id = request.linkedGroupChatId
-    linked_group_type = request.linkedGroupChatType
+    linked_memberships = request.linkedGroupMemberships
+    user_id = request.userId
 
     if is_neutral(text):
         emotion_label = "Neutral"
@@ -78,19 +82,21 @@ async def predict(request: TextRequest):
     numeric_sentiment_score = get_openai_sentiment_score(text)
 
     trigger_emotions = ["Sad", "Fear", "Anger"]
-    if linked_group_id and emotion_label in trigger_emotions:
-        chatroom_collection = "module_chatrooms" if linked_group_type == "module" else "group_chatrooms"
-        message_ref = db.collection(chatroom_collection).document(linked_group_id).collection("messages")
+    if emotion_label in trigger_emotions and linked_memberships:
+        for membership in linked_memberships:
+            chatroom_collection = "module_chatrooms" if membership.type == "module" else "group_chatrooms"
+            message_ref = db.collection(chatroom_collection).document(membership.id).collection("messages")
 
-        system_message = {
-            "_id": str(uuid.uuid4()),
-            "text": "😓 Heads up: Someone in this group might be feeling overwhelmed. Be kind to each other.",
-            "createdAt": firestore.SERVER_TIMESTAMP,
-            "system": True
-        }
+            system_message = {
+                "_id": str(uuid.uuid4()),
+                "text": "😓 Heads up: Someone in this group might be feeling overwhelmed. Be kind to each other.",
+                "createdAt": firestore.SERVER_TIMESTAMP,
+                "system": True,
+                "hiddenFrom": [user_id] if user_id else []
+            }
 
-        message_ref.add(system_message)
-        print(f" Sent group wellness nudge to {chatroom_collection}/{linked_group_id}")
+            message_ref.add(system_message)
+            print(f" Sent wellness nudge to {chatroom_collection}/{membership.id} (hidden from {user_id})")
 
     return {
         "emotion": emotion_label,
