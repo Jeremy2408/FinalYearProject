@@ -9,11 +9,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import { Menu, Divider, Button, IconButton } from 'react-native-paper';
+import { Modal, TouchableOpacity } from 'react-native';
+
 
 const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [typing, setTyping] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [optionsVisible, setOptionsVisible] = useState(false);
+
 
   const db = getFirestore(FIREBASE_APP);
   const auth = getAuth(FIREBASE_APP);
@@ -129,64 +133,66 @@ const Chatbot: React.FC = () => {
   }, []);
 
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: '#fff' }}>
-      <SafeAreaView style={styles.container}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+    <View style={styles.container}>
+      <SafeAreaView edges={['top']} style={{ backgroundColor: '#fff' }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 10 }}>
           <Pressable onPress={() => router.back()}>
             <Text>Go Back</Text>
           </Pressable>
-
-          <Menu
-            visible={menuVisible}
-            onDismiss={() => setMenuVisible(false)}
-            anchor={
-              <IconButton
-                icon="dots-vertical"
-                size={30}
-                iconColor="#007AFF"
-                onPress={() => setMenuVisible(true)}
-                style={{ marginRight: -10 }}
-              />
-            }
-            contentStyle={{
-              backgroundColor: '#F0F0F0',
-              borderRadius: 12,
-              elevation: 5,
-            }}
-          >
-            <Menu.Item
-              onPress={clearChatCache}
-              title="Clear Chat"
-              titleStyle={{ fontSize: 16, fontWeight: '500', color: '#000000' }}
-              style={{ paddingVertical: 12, paddingHorizontal: 16 }}
-              leadingIcon="delete-outline"
-            />
-            <Menu.Item
-              onPress={() => {
-                setMenuVisible(false);
-                router.push('/(chatbot)/chatHistory');
-              }}
-              title="View Previous Conversations"
-              titleStyle={{ fontSize: 16, fontWeight: '500', color: '#000000' }}
-              style={{ paddingVertical: 12, paddingHorizontal: 16 }}
-              leadingIcon="history"
-            />
-          </Menu>
+          <IconButton
+      icon="dots-vertical"
+      size={30}
+      iconColor="#007AFF"
+      onPress={() => setOptionsVisible(true)}
+    />
+  
+          <Modal
+  visible={optionsVisible}
+  animationType="fade"
+  transparent
+  onRequestClose={() => setOptionsVisible(false)}
+>
+  <TouchableOpacity
+    style={{
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: 'rgba(0,0,0,0.3)',
+    }}
+    onPress={() => setOptionsVisible(false)}
+    activeOpacity={1}
+  >
+    <View style={{
+      backgroundColor: '#fff',
+      paddingVertical: 16,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+    }}>
+      <Pressable onPress={clearChatCache} style={{ padding: 16 }}>
+        <Text style={{ fontSize: 16, fontWeight: '500' }}> Clear Chat</Text>
+      </Pressable>
+      <Pressable onPress={() => {
+        setOptionsVisible(false);
+        router.push('/(chatbot)/chatHistory');
+      }} style={{ padding: 16 }}>
+        <Text style={{ fontSize: 16, fontWeight: '500' }}> View Chat History</Text>
+      </Pressable>
+    </View>
+  </TouchableOpacity>
+</Modal>
         </View>
-
-        <GiftedChat
-          messages={messages}
-          onSend={(messages) => onSend(messages)}
-          user={{ _id: 1 }}
-          minComposerHeight={40}
-          maxComposerHeight={80}
-          keyboardShouldPersistTaps="handled"
-          isTyping={typing}
-        />
       </SafeAreaView>
-    </SafeAreaView>
+  
+      <GiftedChat
+        messages={messages}
+        onSend={(messages) => onSend(messages)}
+        user={{ _id: 1 }}
+        isTyping={typing}
+        keyboardShouldPersistTaps="handled"
+        placeholder="Type a message..."
+      />
+    </View>
   );
-};
+}  
 
 const styles = StyleSheet.create({
   container: {

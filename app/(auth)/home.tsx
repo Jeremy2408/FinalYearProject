@@ -6,6 +6,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { getFirestore, collection, query, where, getDocs, onSnapshot, orderBy, limit, setDoc, doc, getDoc } from "firebase/firestore";
 import { Card } from 'react-native-paper'; 
 import useLiveWeeklyMoodData from '../hooks/useLiveWeeklyMoodData';
+import { ScrollView } from 'react-native';
+
+
 
 
 interface Event {
@@ -175,6 +178,8 @@ const Page = () => {
 
     return (
         <SafeAreaView>
+                <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 16 }}>
+
             <View>
                 <Text>{getGreeting()}, {user?.email}</Text>
 
@@ -237,6 +242,7 @@ const Page = () => {
                 <Button title="Go to Chatrooms" onPress={() => router.push('/(chatroom)/chatRoomList')} />
                 <Button title="Sign Out" onPress={() => auth.signOut()} />
             </View>
+            </ScrollView>
         </SafeAreaView>
     );
 };
