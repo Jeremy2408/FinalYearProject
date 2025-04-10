@@ -1,23 +1,21 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { CalendarBody, CalendarContainer, CalendarHeader, DraggingEvent, DraggingEventProps, OnCreateEventResponse, PackedEvent, SizeAnimation } from '@howljs/calendar-kit';
-import { View, Modal, TextInput, Button, SafeAreaView, Pressable, Text, Alert, TouchableOpacity } from 'react-native';
+import { View, Modal, TextInput, Button, SafeAreaView, Pressable, Text, Alert, TouchableOpacity, ScrollView, FlatList } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
-import { collection, addDoc, getFirestore, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getFirestore, getDocs, deleteDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
 import { RRule } from 'rrule';
+import { configureReanimatedLogger } from 'react-native-reanimated';
 
+configureReanimatedLogger({
+  // Removed invalid property 'disableForMessage' as it does not exist in 'LoggerConfig'
+});
 
 const Calendar = () => {
-  const [events, setEvents] = useState([
-    {
-      id: '1',
-      title: 'Meeting with Team',
-      start: { dateTime: '2025-01-15T10:00:00Z' },
-      end: { dateTime: '2025-01-15T11:00:00Z' },
-      color: '#4285F4',
-    },
-  ]);
+
+  const [events, setEvents] = useState<any[]>([]);
+
 
   const [isModalVisible, setModalVisible] = useState(false);
   const [newEventTitle, setNewEventTitle] = useState('');
@@ -43,6 +41,18 @@ const Calendar = () => {
     { label: 'Sat', value: 'SA' },
     { label: 'Sun', value: 'SU' },
   ];
+
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [loadingResults, setLoadingResults] = useState(false);
+  const [previewEvents, setPreviewEvents] = useState<any[]>([]);
+
+  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [eventGroup, setEventGroup] = useState('');
+  const [showSaveButton, setShowSaveButton] = useState(false);
+
 
   const handleDragCreateStart = (start: OnCreateEventResponse) => {
     console.log("Started creating event at:", start);
@@ -81,7 +91,7 @@ const Calendar = () => {
     const newEventId = new Date().toISOString();
     const db = getFirestore();
 
-    const groupInfo = linkedGroup ? groupChats.find(g => g.value === linkedGroup) : null;
+    const groupInfo = eventGroup ? groupChats.find(g => g.value === eventGroup) : null;
 
     const recurrenceRule = selectedDays.length > 0
       ? `RRULE:FREQ=WEEKLY;BYDAY=${selectedDays.join(',')}`
@@ -96,7 +106,7 @@ const Calendar = () => {
       type: eventType,
       ...(recurrenceRule && { recurrenceRule }),
       ...(groupInfo && {
-        linkedGroupChatId: linkedGroup,
+        linkedGroupChatId: eventGroup,
         linkedGroupChatName: groupInfo.label,
       })
     };
@@ -115,7 +125,7 @@ const Calendar = () => {
     }
   };
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (): Promise<any[] | undefined> => {
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) {
@@ -134,6 +144,8 @@ const Calendar = () => {
           color: data.color,
           type: data.type,
           originalId: doc.id,
+          linkedGroupChatId: data.linkedGroupChatId || '',
+          linkedGroupChatName: data.linkedGroupChatName || '',
         };
 
         if (data.recurrenceRule) {
@@ -159,10 +171,16 @@ const Calendar = () => {
             start: data.start,
             end: data.end,
             color: data.color,
+            location: data.location || '',
+            linkedGroupChatId: data.linkedGroupChatId || '',
+            linkedGroupChatName: data.linkedGroupChatName || '',
+
           });
         }
       });
       setEvents(userEvents);
+      return userEvents;
+
     } catch (error) {
       console.error("Error fetching events from Firestore:", error);
     }
@@ -189,14 +207,14 @@ const Calendar = () => {
     setOpen(o);
     if (value) setGroupOpen(false);
   };
-  
+
   const handleGroupOpen = (g: React.SetStateAction<boolean>) => {
     const value = typeof g === 'function' ? g(false) : g;
     setGroupOpen(g);
     if (value) setOpen(false);
   };
-  
-  
+
+
 
   useEffect(() => {
     fetchEvents();
@@ -210,10 +228,10 @@ const Calendar = () => {
       console.error("User not authenticated");
       return;
     }
-  
+
     const db = getFirestore();
     const baseId = eventId.includes('_') ? eventId.split('_')[0] : eventId;
-  
+
     try {
       await deleteDoc(doc(db, 'users', user.uid, 'events', baseId));
       setEvents((prevEvents) => prevEvents.filter(event => !event.id.startsWith(baseId)));
@@ -221,7 +239,7 @@ const Calendar = () => {
       console.error("Error deleting event:", error);
     }
   };
-  
+
 
   const handleLongPress = (eventId: string) => {
     Alert.alert(
@@ -234,16 +252,218 @@ const Calendar = () => {
       { cancelable: true }
     );
   };
+  const handleLinkSave = async () => {
+    console.log(" handleLinkSave triggered");
+
+    if (!selectedEvent) {
+      console.log(" No selectedEvent");
+      return;
+    }
+
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      console.log(" No user");
+      return;
+    }
+
+    const db = getFirestore();
+    const groupInfo = groupChats.find((g) => g.value === eventGroup);
+
+    const updatePayload = {
+      linkedGroupChatId: eventGroup,
+      linkedGroupChatName: groupInfo?.label || '',
+    };
+
+    try {
+      const eventsRef = collection(db, 'users', user.uid, 'events');
+      const snapshot = await getDocs(eventsRef);
+
+      const batch = writeBatch(db);
+      const affectedIds: string[] = [];
+
+      snapshot.docs.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.title === selectedEvent.title) {
+          const docRef = doc(db, 'users', user.uid, 'events', docSnap.id);
+          batch.update(docRef, updatePayload);
+          affectedIds.push(docSnap.id);
+        }
+      });
+
+      await batch.commit();
+      console.log(" Firestore update successful for:", affectedIds);
+
+      setEvents((prevEvents) =>
+        prevEvents.map((ev) => {
+          const baseId = ev.originalId || ev.id.split('_')[0];
+          return affectedIds.includes(baseId)
+            ? { ...ev, ...updatePayload }
+            : ev;
+        })
+      );
+
+      setSelectedEvent((prev: any) => ({
+        ...prev,
+        ...updatePayload,
+      }));
+
+      setGroupOpen(false);
+      setShowSaveButton(false);
+      setShowEventModal(false);
+    } catch (error) {
+      console.error(" Firestore update failed:", error);
+    }
+  };
+
+
+
+
+
+  const handleEventPress = (event: PackedEvent) => {
+    setSelectedEvent(event);
+    setShowEventModal(true);
+  };
 
   const renderEvent = (event: PackedEvent, size: SizeAnimation) => {
     return (
-      <TouchableOpacity onLongPress={() => handleLongPress(event.id)}>
-        <View style={{ padding: 3, backgroundColor: event.color, borderRadius: 5, width: '100%' }}>
-          <Text style={{ color: 'white', fontWeight: 'bold', textAlign: 'center', flexWrap: 'nowrap' }}>{event.title}</Text>
+      <TouchableOpacity
+        onPress={() => handleEventPress(event)}
+        onLongPress={() => handleLongPress(event.id)}
+      >
+        <View style={{
+          padding: 3,
+          backgroundColor: event.color,
+          borderRadius: 5,
+          width: '100%',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <Text
+            style={{
+              color: 'white',
+              fontWeight: 'bold',
+              textAlign: 'center',
+              fontSize: 12
+            }}
+            numberOfLines={2}
+          >
+            {event.title}
+          </Text>
+          {event.linkedGroupChatName && (
+            <Text
+              style={{
+                color: 'white',
+                fontSize: 10,
+                textAlign: 'center',
+                marginTop: 2
+              }}
+              numberOfLines={1}
+            >
+              {event.linkedGroupChatName}
+            </Text>
+          )}
         </View>
       </TouchableOpacity>
     );
   };
+
+
+
+  const handleCourseSearch = async () => {
+    setLoadingResults(true);
+    try {
+      const response = await fetch('https://us-central1-final-year-project-2bae1.cloudfunctions.net/importTimetable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courseCode: searchQuery,
+
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.searchResults) {
+        setSearchResults(data.searchResults);
+      } else if (data.events) {
+        await saveEventsToFirestore(data.events);
+        fetchEvents();
+        setShowImportModal(false);
+      }
+    } catch (err) {
+      console.error("Error searching:", err);
+    } finally {
+      setLoadingResults(false);
+    }
+  };
+
+  const handleCourseSelect = async (course: any) => {
+    try {
+      const response = await fetch('https://us-central1-final-year-project-2bae1.cloudfunctions.net/fetchTimetableByIdentity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identity: course.identity,
+          categoryTypeIdentity: course.categoryTypeIdentity,
+
+        }),
+      });
+
+      const data = await response.json();
+      if (data.events) {
+        setPreviewEvents(data.events);
+      }
+    } catch (err) {
+      console.error("Error fetching timetable:", err);
+    }
+  };
+
+  const saveEventsToFirestore = async (eventList: any[]) => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    const db = getFirestore();
+
+    if (!user) return;
+
+    for (const event of eventList) {
+      await addDoc(collection(db, 'users', user.uid, 'events'), {
+        ...event,
+        color: '#4285F4',
+      });
+    }
+  };
+
+  const handleSavePreview = async () => {
+    await saveEventsToFirestore(previewEvents);
+    fetchEvents();
+    setPreviewEvents([]);
+    setSearchResults([]);
+    setShowImportModal(false);
+  };
+
+  const clearAcademicTimetable = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return;
+    const db = getFirestore();
+
+    try {
+      const snapshot = await getDocs(collection(db, 'users', user.uid, 'events'));
+      const deletions = snapshot.docs.filter(doc => doc.data().type === 'academic');
+
+      await Promise.all(deletions.map(docSnap => {
+        return deleteDoc(doc(db, 'users', user.uid, 'events', docSnap.id));
+      }));
+
+      fetchEvents();
+      Alert.alert("Timetable cleared", "All academic events have been deleted.");
+    } catch (error) {
+      console.error("Error clearing timetable:", error);
+      Alert.alert("Error", "Something went wrong while clearing timetable.");
+    }
+  };
+
 
   const renderTitleModal = () => (
     <Modal visible={isModalVisible} animationType="slide" transparent>
@@ -270,14 +490,19 @@ const Calendar = () => {
           <View style={{ zIndex: 5 }}>
             <DropDownPicker
               open={groupOpen}
-              value={linkedGroup}
+              value={eventGroup}
               items={groupChats}
-              setOpen={handleGroupOpen}
-              setValue={setLinkedGroup}
-              placeholder="Link to Group Chat (optional)"
-              containerStyle={{ height: 40, marginBottom: 20 }}
+              setOpen={setGroupOpen}
+              setValue={setEventGroup}
+              placeholder="Select a group"
+              containerStyle={{ marginBottom: 10 }}
               dropDownContainerStyle={{ backgroundColor: '#fafafa' }}
+              onChangeValue={() => {
+                console.log("Group selected");
+                setShowSaveButton(true);
+              }}
             />
+
           </View>
 
           <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Repeat Weekly On:</Text>
@@ -310,12 +535,84 @@ const Calendar = () => {
         </View>
       </View>
     </Modal>
+
   );
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Pressable onPress={() => router.back()}><Text>Go Back</Text></Pressable>
       <>
+        <Button title="Import Timetable" onPress={() => setShowImportModal(true)} />
+        <Button
+          title=" Clear Timetable"
+          onPress={() =>
+            Alert.alert(
+              "Clear Timetable?",
+              "This will delete all academic events.",
+              [
+                { text: "Cancel", style: "cancel" },
+                { text: "Clear", style: "destructive", onPress: clearAcademicTimetable }
+              ]
+            )
+          }
+        />
+
+        <Modal visible={showImportModal} animationType="slide" transparent>
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'rgba(0,0,0,0.5)',
+            }}
+          >
+            <View
+              style={{
+                width: '80%',
+                backgroundColor: 'white',
+                padding: 20,
+                borderRadius: 10,
+              }}
+            >
+              <TextInput
+                placeholder="Enter course code (e.g. TU914)"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                style={{ borderBottomWidth: 1, marginBottom: 10 }}
+              />
+              <Button
+                title="Search"
+                onPress={handleCourseSearch}
+                disabled={loadingResults}
+              />
+
+              <ScrollView style={{ maxHeight: 200 }}>
+                {searchResults.map((result, index) => (
+                  <TouchableOpacity key={index} onPress={() => handleCourseSelect(result)}>
+                    <Text style={{ padding: 8 }}>{result.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+
+              {previewEvents.length > 0 && (
+                <ScrollView style={{ maxHeight: 200, marginTop: 10 }}>
+                  <Text style={{ fontWeight: 'bold', marginBottom: 5 }}>
+                    Timetable Preview:
+                  </Text>
+                  {[...new Set(previewEvents.map((e) => e.title))].map((title, index) => (
+                    <Text key={index}> {title}</Text>
+                  ))}
+
+                  <Button title="Save to Calendar" onPress={handleSavePreview} />
+                </ScrollView>
+              )}
+
+              <Button title="Close" onPress={() => setShowImportModal(false)} />
+            </View>
+          </View>
+        </Modal>
+
         <CalendarContainer
           allowDragToEdit={false}
           allowPinchToZoom={true}
@@ -331,6 +628,83 @@ const Calendar = () => {
           <CalendarBody renderDraggingEvent={renderDraggingEvent} renderEvent={renderEvent} />
         </CalendarContainer>
         {renderTitleModal()}
+
+        <Modal visible={showEventModal} transparent animationType="slide">
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <View style={{ width: '90%', backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <Text style={{ fontWeight: 'bold', fontSize: 16, flexShrink: 1 }}>
+                  {selectedEvent?.title}
+                </Text>
+
+
+              </View>
+
+              <Text>🕒 {new Date(selectedEvent?.start?.dateTime).toLocaleString()} → {new Date(selectedEvent?.end?.dateTime).toLocaleString()}</Text>
+              {selectedEvent?.type === 'academic' && (
+                <Text>🏫 Room: {selectedEvent.location || 'N/A'}</Text>
+              )}
+              {selectedEvent?.linkedGroupChatId ? (
+                <>
+                  <Text style={{ marginTop: 10, fontStyle: 'italic' }}>
+                    Linked to: {selectedEvent.linkedGroupChatName || 'Unknown group'}
+                  </Text>
+                  <Button title="Change Group Link" onPress={() => setGroupOpen(true)} />
+                </>
+              ) : (
+                <Button title="Link to Group Chat" onPress={() => setGroupOpen(true)} />
+              )}
+
+              {groupOpen && (
+                <>
+                  <Text style={{ fontWeight: 'bold', marginBottom: 10 }}>Select a Group:</Text>
+                  <FlatList
+                    data={groupChats}
+                    keyExtractor={(item) => item.value}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setEventGroup(item.value);
+                          setShowSaveButton(true);
+                        }}
+                        style={{
+                          padding: 10,
+                          backgroundColor: eventGroup === item.value ? '#ddd' : '#f9f9f9',
+                          marginBottom: 5,
+                          borderRadius: 5,
+                        }}
+                      >
+                        <Text>{item.label}</Text>
+                      </TouchableOpacity>
+                    )}
+                  />
+
+                  {showSaveButton && (
+                    <>
+                      <Button title="Save Link" onPress={handleLinkSave} />
+                      <Button
+                        title="Cancel"
+                        onPress={() => {
+                          setGroupOpen(false);
+                          setShowSaveButton(false);
+                        }}
+                      />
+                    </>
+                  )}
+                </>
+              )}
+
+
+
+
+
+              <Button title="Close" onPress={() => setShowEventModal(false)} />
+            </View>
+          </View>
+        </Modal>
+
+
+
       </>
     </SafeAreaView>
   );
