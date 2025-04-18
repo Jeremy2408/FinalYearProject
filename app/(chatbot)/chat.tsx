@@ -2,7 +2,6 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { View, StyleSheet, Pressable, Text } from 'react-native';
 import { GiftedChat, IMessage } from 'react-native-gifted-chat';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fetchOpenAIResponse } from '../../services/openaiService';
 import { getFirestore, collection, addDoc, setDoc, doc, orderBy, getDocs, query } from 'firebase/firestore';
 import { FIREBASE_APP } from '@/FirebaseConfig';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -43,7 +42,7 @@ const Chatbot: React.FC = () => {
             user: {
               _id: data.user?._id || 2,
               name: data.user?.name || 'AI Assistant',
-              avatar: data.user?.avatar || 'https://placeimg.com/140/140/any',
+              avatar: data.user?.avatar || 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Robot/3D/robot_3d.png',
             },
           };
         });
@@ -69,7 +68,7 @@ const Chatbot: React.FC = () => {
           user: {
             _id: 2,
             name: 'AI Assistant',
-            avatar: 'https://placeimg.com/140/140/any',
+            avatar: 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Robot/3D/robot_3d.png',
           },
         },
       ]);
@@ -109,15 +108,29 @@ const Chatbot: React.FC = () => {
       });
       
 
-      const botResponse = await fetchOpenAIResponse(userMessage);
-      const botMessage: IMessage = {
+      const response = await fetch("https://finalyearproject-production-ddac.up.railway.app/smart-assistant", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: userMessage,
+          roomId: "personal-chat",      
+          roomType: "personal",
+          mode: "chat_assistant",        
+        }),
+      });
+      
+      const data = await response.json();
+      const botResponse = data.reply || "Sorry, I couldn't generate a response.";
+            const botMessage: IMessage = {
         _id: `${user.uid}_bot_${timestampStr}`,
         text: botResponse,
         createdAt: new Date(),
         user: {
           _id: 2,
           name: 'AI Assistant',
-          avatar: 'https://placeimg.com/140/140/any',
+          avatar: 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Robot/3D/robot_3d.png',
         },
       };
 
@@ -136,7 +149,7 @@ const Chatbot: React.FC = () => {
         user: {
           _id: 2,
           name: 'AI Assistant',
-          avatar: 'https://placeimg.com/140/140/any',
+          avatar: 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Robot/3D/robot_3d.png',
         },
       });
       
