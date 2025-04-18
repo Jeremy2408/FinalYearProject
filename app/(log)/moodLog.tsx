@@ -5,6 +5,7 @@ import { FIREBASE_APP } from '@/FirebaseConfig';
 import { getAuth } from 'firebase/auth';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import BackButton from '@/components/BackButton';
 
 const MoodLog = () => {
     const [mood, setMood] = useState('');
@@ -96,8 +97,8 @@ const MoodLog = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Pressable onPress={() => router.back()}><Text>Go Back</Text></Pressable>
-            
+               <BackButton />
+           
             <Text style={styles.title}>Log Your Mood</Text>
             <Text style={styles.subtitle}>Today is {getCurrentDay()}</Text>
             <TextInput

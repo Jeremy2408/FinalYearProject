@@ -5,6 +5,7 @@ import { FIREBASE_APP } from '@/FirebaseConfig';
 import { getAuth } from 'firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import BackButton from '../../components/BackButton';
 
 interface MoodLog {
     id: string;
@@ -65,8 +66,7 @@ const MoodHistory = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-        <Pressable onPress={()=> router.back()}><Text>Go Back</Text></Pressable>
-            
+                   <BackButton />          
             <Text style={styles.title}>Mood History</Text>
             <FlatList
                 data={moodLogs}

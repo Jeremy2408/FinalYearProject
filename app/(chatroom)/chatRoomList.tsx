@@ -2,13 +2,14 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import BackButton from '@/components/BackButton';
 
 const ChatRoomList = () => {
   const router = useRouter();
 
   return (
     <SafeAreaView style={styles.container}>
-      <Pressable onPress={()=> router.back()}><Text>Go Back</Text></Pressable>
+       <BackButton />
         
       <Text style={styles.title}> Chatrooms</Text>
 

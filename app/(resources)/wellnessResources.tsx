@@ -1,10 +1,16 @@
-import { router } from 'expo-router';
 import React from 'react';
-import { ScrollView, View, StyleSheet, Linking, Pressable, Text } from 'react-native';
-import { Card, Title, Paragraph, Button } from 'react-native-paper';
+import { ScrollView, View, StyleSheet, Linking } from 'react-native';
+import { Card, Paragraph, Button } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import BackButton from '../../components/BackButton';
 
-const resources = [
+type ResourceItem = {
+  title: string;
+  description: string;
+  url: string;
+};
+
+const resources: ResourceItem[] = [
   {
     title: 'Counselling Service',
     description: 'Free and confidential one-on-one support, emergency help, and online CBT tools.',
@@ -39,14 +45,13 @@ const WellnessResources = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-        <Pressable onPress={() => router.back()}><Text>Go Back</Text></Pressable>
-      
+      <BackButton />
       <ScrollView contentContainerStyle={styles.container}>
         {resources.map((item, index) => (
           <Card key={index} style={styles.card}>
             <Card.Content>
-              <Title style={styles.title}>{item.title}</Title>
-              <Paragraph>{item.description}</Paragraph>
+              <Paragraph style={styles.title}>{item.title}</Paragraph>
+              <Paragraph style={styles.description}>{item.description}</Paragraph>
             </Card.Content>
             <Card.Actions>
               <Button onPress={() => handleOpenLink(item.url)}>Learn More</Button>
@@ -73,6 +78,14 @@ const styles = StyleSheet.create({
   title: {
     fontWeight: 'bold',
     color: '#004080',
+    fontSize: 16,
+    marginBottom: 4,
+  },
+  description: {
+    color: '#4A4A4A',
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 20,
   },
 });
 

@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from 'react-native';
 import { View } from 'react-native';
 import { router } from 'expo-router';
+import BackButton from '@/components/BackButton';
 
 const ChatroomScreen: React.FC = () => {
   const [messages, setMessages] = useState<IMessage[]>([]);
@@ -43,7 +44,7 @@ const ChatroomScreen: React.FC = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0} 
     >
-      <Pressable onPress={()=> router.back()}><Text>Go Back</Text></Pressable>
+       <BackButton />
     
       <GiftedChat
         messages={messages}

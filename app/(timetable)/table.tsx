@@ -8,6 +8,7 @@ import { router } from 'expo-router';
 import { RRule } from 'rrule';
 import { configureReanimatedLogger } from 'react-native-reanimated';
 import { IconButton } from 'react-native-paper';
+import BackButton from '@/components/BackButton';
 
 configureReanimatedLogger({
   // Removed invalid property 'disableForMessage' as it does not exist in 'LoggerConfig'
@@ -548,9 +549,8 @@ const Calendar = () => {
     <SafeAreaView style={{ flex: 1 }}>
       <>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 10 }}>
-  <Pressable onPress={() => router.back()}>
-    <Text>Go Back</Text>
-  </Pressable>
+      <BackButton />
+
 
   <IconButton
     icon="dots-vertical"

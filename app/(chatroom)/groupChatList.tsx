@@ -5,6 +5,7 @@ import { getFirestore, collection, getDocs, doc, setDoc, serverTimestamp, getDoc
 import { auth } from '@/FirebaseConfig';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import BackButton from '@/components/BackButton';
 
 const GroupChatList = () => {
   const [groups, setGroups] = useState<{ id: string; name: string; canInvite: boolean }[]>([]);
@@ -122,7 +123,7 @@ const GroupChatList = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-            <Pressable onPress={() => router.back()}><Text>Go Back</Text></Pressable>
+       <BackButton />
       
       <View style={styles.headerRow}>
         

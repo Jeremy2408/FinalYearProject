@@ -6,6 +6,8 @@ import { useWeeklyMoodData, useMonthlyMoodData, useDailyMoodData } from '../hook
 import { router } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import BackButton from '../../components/BackButton';
+
 
 const exportMoodDataAsCSV = async (moodData: { label: string, score: number }[]) => {
   const csvContent = [
@@ -56,7 +58,8 @@ const MoodAnalytics = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Pressable onPress={() => router.back()}><Text>Go Back</Text></Pressable>
+        <BackButton />
+
       <Text style={styles.title}>Mood Trends Over Time</Text>
 
       <View style={styles.toggleContainer}>
@@ -97,7 +100,7 @@ const MoodAnalytics = () => {
           style={styles.graphStyle}
         />
       ) : (
-        <Text>No valid mood data available yet.</Text>
+<Text style={{ marginVertical: 20 }}>No valid mood data available yet.</Text>
       )}      
       
       <Button title="Export CSV Report" onPress={() => exportMoodDataAsCSV(moodData)} />

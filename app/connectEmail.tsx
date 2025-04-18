@@ -8,6 +8,7 @@ import { getFirestore, doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconButton } from 'react-native-paper';
+import BackButton from '@/components/BackButton';
 
 const BASE_URL = 'https://us-central1-final-year-project-2bae1.cloudfunctions.net';
 
@@ -112,9 +113,8 @@ export default function ConnectEmail() {
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <SafeAreaView edges={['top']} style={{ backgroundColor: '#fff' }}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()}>
-            <Text>Go Back</Text>
-          </Pressable>
+        <BackButton />
+
           <IconButton
             icon="dots-vertical"
             size={30}

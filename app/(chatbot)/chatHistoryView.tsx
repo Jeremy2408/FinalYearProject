@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getFirestore, collection, query, orderBy, getDocs, Timestamp } from 'firebase/firestore';
 import { auth } from '@/FirebaseConfig';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import BackButton from '@/components/BackButton';
 
 const ChatHistoryView = () => {
   const { date } = useLocalSearchParams();
@@ -46,9 +47,8 @@ const ChatHistoryView = () => {
     <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: '#fff' }}>
       <SafeAreaView style={styles.container}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Pressable onPress={() => router.back()}>
-                  <Text>Go Back</Text>
-                  </Pressable>
+        <BackButton />
+
         </View>
         <GiftedChat
           messages={messages}

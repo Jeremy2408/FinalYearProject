@@ -4,6 +4,7 @@ import { getFirestore, collection, query, orderBy, getDocs } from 'firebase/fire
 import { auth } from '@/FirebaseConfig';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import BackButton from '@/components/BackButton';
 
 interface ChatMessage {
   _id: string;
@@ -53,9 +54,8 @@ const ChatHistory = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-      <Pressable onPress={() => router.back()}>
-        <Text>Go Back</Text>
-        </Pressable>
+      <BackButton />
+
         <Text style={styles.title}>Chat History</Text>
       </View>
 

@@ -6,6 +6,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { auth } from '@/FirebaseConfig';
 import { v4 as uuidv4 } from 'uuid';
+import BackButton from '@/components/BackButton';
 
 const GroupChatRoom = () => {
   const { roomId } = useLocalSearchParams();
@@ -67,8 +68,11 @@ const GroupChatRoom = () => {
     const msg = newMessages[0];
     const messageText = msg.text.trim();
   
-    if (messageText.startsWith('/wellness')) {
-      const prompt = messageText.replace('/wellness', '').trim();
+    if (
+      messageText.trim().toLowerCase().startsWith("/wellness") ||
+      messageText.trim().toLowerCase() === "/resources"
+        ) {
+          const prompt = messageText.trim();
   
       await fetch("https://finalyearproject-production-ddac.up.railway.app/smart-assistant", {
         method: "POST",
@@ -111,7 +115,7 @@ const GroupChatRoom = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Pressable onPress={() => router.back()}><Text>Go Back</Text></Pressable>
+       <BackButton />
 
       <View style={styles.header}>
       <Text style={styles.title}>{roomName}</Text>

@@ -7,6 +7,7 @@ import { auth } from '@/FirebaseConfig';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { v4 as uuidv4 } from 'uuid';
+import BackButton from '@/components/BackButton';
 
 
 const ModuleChatRoom = () => {
@@ -44,8 +45,11 @@ const ModuleChatRoom = () => {
     const msg = newMessages[0];
     const messageText = msg.text.trim();
   
-    if (messageText.startsWith('/wellness')) {
-      const prompt = messageText.replace('/wellness', '').trim();
+    if (
+      messageText.trim().toLowerCase().startsWith("/wellness") ||
+      messageText.trim().toLowerCase() === "/resources"
+        ) {
+          const prompt = messageText.trim();
   
       await fetch("https://finalyearproject-production-ddac.up.railway.app/smart-assistant", {
         method: "POST",
@@ -90,10 +94,8 @@ const ModuleChatRoom = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-         <Pressable onPress={()=> router.back()}><Text>Go Back</Text></Pressable>
-        <Text style={styles.title}>{roomId}</Text>
-      </View>
+             <BackButton />
+
       <GiftedChat
         messages={messages}
         onSend={(messages) => onSend(messages)}

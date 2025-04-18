@@ -10,6 +10,7 @@ import { router } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import { Menu, Divider, Button, IconButton } from 'react-native-paper';
 import { Modal, TouchableOpacity } from 'react-native';
+import BackButton from '@/components/BackButton';
 
 
 const Chatbot: React.FC = () => {
@@ -154,9 +155,8 @@ const Chatbot: React.FC = () => {
     <View style={styles.container}>
       <SafeAreaView edges={['top']} style={{ backgroundColor: '#fff' }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 10 }}>
-          <Pressable onPress={() => router.back()}>
-            <Text>Go Back</Text>
-          </Pressable>
+        <BackButton />
+
           <IconButton
       icon="dots-vertical"
       size={30}
