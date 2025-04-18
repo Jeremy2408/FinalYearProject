@@ -28,15 +28,28 @@ async def smart_assistant(request: AssistantRequest):
             " Do not ask questions, just offer supportive, constructive replies."
         )
 
-        response = openai.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": request.prompt.strip()}
-            ]
-        )
+        trigger_phrases = [
+            "/resources",
+            "/wellness help",
+            "where can i get support",
+            "how do i get help",
+        ]
 
-        reply = response.choices[0].message.content.strip()
+        if any(phrase in request.prompt.lower() for phrase in trigger_phrases):
+            reply = (
+                " You can access TU Dublin's official student wellbeing services here:\n"
+                "https://www.tudublin.ie/for-students/student-services-and-support/student-wellbeing/"
+            )
+        else:
+            response = openai.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": request.prompt.strip()}
+                ]
+            )
+            reply = response.choices[0].message.content.strip()
+
         print(" Assistant Reply:", reply)
 
         chatroom_collection = "module_chatrooms" if request.roomType == "module" else "group_chatrooms"
