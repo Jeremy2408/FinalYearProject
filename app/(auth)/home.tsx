@@ -238,6 +238,7 @@ const Page = () => {
                 <Button title="Go to Mood Log" onPress={() => router.push('/(log)/moodLog')} />
                 <Button title="View Mood Analytics" onPress={() => router.push('/(analytics)/moodAnalytics')} />
                 <Button title="Timetable" onPress={() => router.push('/(timetable)/table')} />
+                <Button title="Connect Email" onPress={() => router.push('/connectEmail')}/>
                 <Button title="Chatbot" onPress={() => router.push('/(chatbot)/chat')} />
                 <Button title="Go to Chatrooms" onPress={() => router.push('/(chatroom)/chatRoomList')} />
                 <Button title="Sign Out" onPress={() => auth.signOut()} />

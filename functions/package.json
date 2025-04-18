@@ -10,14 +10,17 @@
     "logs": "firebase functions:log"
   },
   "engines": {
-    "node": "22"
+    "node": "20"
   },
   "main": "index.js",
   "dependencies": {
+    "@azure/msal-node": "^3.5.1",
     "axios": "^1.8.4",
     "cheerio": "^1.0.0",
-    "firebase-admin": "^12.6.0",
-    "firebase-functions": "^6.0.1"
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^4.9.0"
   },
   "devDependencies": {
     "eslint": "^8.15.0",
