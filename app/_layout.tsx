@@ -76,6 +76,7 @@ export default function RootLayout() {
       <Stack.Screen name="(analytics)/moodAnalytics" options={{ headerShown: false }} />
       <Stack.Screen name="oauthRedirect" options={{ headerShown: false }} />
       <Stack.Screen name="connectEmail" options={{ headerShown: false }} />
+      <Stack.Screen name="(resources)/wellnessResources" options={{ headerShown: false }} />
       
 
 
