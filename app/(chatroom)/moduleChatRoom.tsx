@@ -6,6 +6,8 @@ import { getFirestore } from 'firebase/firestore';
 import { auth } from '@/FirebaseConfig';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { v4 as uuidv4 } from 'uuid';
+
 
 const ModuleChatRoom = () => {
   const { roomId } = useLocalSearchParams();
@@ -37,21 +39,54 @@ const ModuleChatRoom = () => {
   }, [roomId]);
 
   const onSend = useCallback(async (newMessages: IMessage[] = []) => {
+    if (!roomId || typeof roomId !== 'string') return;
+  
+    const msg = newMessages[0];
+    const messageText = msg.text.trim();
+  
+    if (messageText.startsWith('/wellness')) {
+      const prompt = messageText.replace('/wellness', '').trim();
+  
+      await fetch("https://finalyearproject-production-ddac.up.railway.app/smart-assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt,
+          roomId,
+          roomType: "module",
+        }),
+      });
+  
+      return;
+    }
+  
     const messagesRef = collection(db, `module_chatrooms/${roomId}/messages`);
+  
+    await addDoc(messagesRef, {
+      text: messageText,
+      createdAt: serverTimestamp(),
+      user: {
+        _id: user?.uid || 'anonymous',
+        name: user?.email || 'Student',
+      },
+    });
 
-    const writes = newMessages.map(msg =>
-      addDoc(messagesRef, {
-        text: msg.text,
-        createdAt: serverTimestamp(),
-        user: {
-          _id: user?.uid || 'anonymous',
-          name: user?.email || 'Student',
-        },
-      })
-    );
+    setMessages(previousMessages =>
+  GiftedChat.append(previousMessages, [
+    {
+      _id: uuidv4(),
+      text: messageText,
+      createdAt: new Date(),
+      user: {
+        _id: user?.uid || 'anonymous',
+        name: user?.email || 'You',
+      },
+    }
+  ])
+);
 
-    await Promise.all(writes);
   }, [roomId, user]);
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -63,7 +98,6 @@ const ModuleChatRoom = () => {
         messages={messages}
         onSend={(messages) => onSend(messages)}
         user={{ _id: user?.uid || 'anonymous', name: user?.email || 'Student' }}
-        renderAvatar={null}
         placeholder="Type your message..."
         showUserAvatar={false}
       />

@@ -3,7 +3,7 @@ import { View, StyleSheet, Pressable, Text } from 'react-native';
 import { GiftedChat, IMessage } from 'react-native-gifted-chat';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchOpenAIResponse } from '../../services/openaiService';
-import { getFirestore, collection, addDoc, setDoc, doc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, setDoc, doc, orderBy, getDocs, query } from 'firebase/firestore';
 import { FIREBASE_APP } from '@/FirebaseConfig';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -25,31 +25,37 @@ const Chatbot: React.FC = () => {
 
   useEffect(() => {
     const loadMessages = async () => {
+      if (!user) return;
+  
       try {
-        const cachedMessages = await AsyncStorage.getItem('chat_messages');
-        if (cachedMessages) {
-          setMessages(JSON.parse(cachedMessages));
-        } else {
-          setMessages([
-            {
-              _id: 1,
-              text: 'Hello! How are you feeling today?',
-              createdAt: new Date(),
-              user: {
-                _id: 2,
-                name: 'AI Assistant',
-                avatar: 'https://placeimg.com/140/140/any',
-              },
+        const db = getFirestore(FIREBASE_APP);
+        const chatsRef = collection(db, `users/${user.uid}/chats`);
+        const q = query(chatsRef, orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
+  
+        const formatted = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            _id: data._id || data.id,
+            text: data.text,
+            createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
+            user: {
+              _id: data.user?._id || 2,
+              name: data.user?.name || 'AI Assistant',
+              avatar: data.user?.avatar || 'https://placeimg.com/140/140/any',
             },
-          ]);
-        }
+          };
+        });
+  
+        setMessages(formatted);
       } catch (error) {
-        console.error('Error loading messages:', error);
+        console.error("Error loading messages from Firestore:", error);
       }
     };
-
+  
     loadMessages();
   }, []);
+  
 
   const clearChatCache = async () => {
     try {
@@ -92,9 +98,15 @@ const Chatbot: React.FC = () => {
 
       await setDoc(doc(db, `users/${user.uid}/chats`, messageId), {
         id: messageId,
-        ...newMessages[0],
+        text: newMessages[0].text,
         createdAt: timestamp,
+        user: {
+          _id: 1,
+          name: 'You',
+          avatar: '', 
+        },
       });
+      
 
       const botResponse = await fetchOpenAIResponse(userMessage);
       const botMessage: IMessage = {
@@ -118,9 +130,15 @@ const Chatbot: React.FC = () => {
 
       await setDoc(doc(db, `users/${user.uid}/chats`, `${user.uid}_bot_${timestampStr}`), {
         id: `${user.uid}_bot_${timestampStr}`,
-        ...botMessage,
+        text: botResponse,
         createdAt: new Date(),
+        user: {
+          _id: 2,
+          name: 'AI Assistant',
+          avatar: 'https://placeimg.com/140/140/any',
+        },
       });
+      
 
       AsyncStorage.setItem('chat_messages', JSON.stringify([...messages, botMessage])).catch(error =>
         console.error('Error saving messages to AsyncStorage:', error)
