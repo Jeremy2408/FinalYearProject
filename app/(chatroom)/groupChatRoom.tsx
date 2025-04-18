@@ -142,6 +142,7 @@ const GroupChatRoom = () => {
       ])
     );
   }, [roomId, user]);
+  
 
   return (
     <SafeAreaView style={styles.container}>
