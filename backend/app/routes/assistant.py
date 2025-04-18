@@ -35,7 +35,9 @@ async def smart_assistant(request: AssistantRequest):
             "how do i get help",
         ]
 
-        if any(phrase in request.prompt.lower() for phrase in trigger_phrases):
+        prompt_text = request.prompt.lower().strip()
+
+        if any(prompt_text.startswith(phrase) for phrase in trigger_phrases):
             reply = (
                 " You can access TU Dublin's official student wellbeing services here:\n"
                 "https://www.tudublin.ie/for-students/student-services-and-support/student-wellbeing/"
