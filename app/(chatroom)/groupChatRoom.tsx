@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { auth } from '@/FirebaseConfig';
+import { v4 as uuidv4 } from 'uuid';
 
 const GroupChatRoom = () => {
   const { roomId } = useLocalSearchParams();
@@ -62,19 +63,51 @@ const GroupChatRoom = () => {
 
   const onSend = useCallback(async (newMessages: IMessage[] = []) => {
     if (!roomId || typeof roomId !== 'string') return;
-
+  
     const msg = newMessages[0];
+    const messageText = msg.text.trim();
+  
+    if (messageText.startsWith('/wellness')) {
+      const prompt = messageText.replace('/wellness', '').trim();
+  
+      await fetch("https://finalyearproject-production-ddac.up.railway.app/smart-assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt,
+          roomId,
+          roomType: "group", 
+        }),
+      });
+  
+      return; 
+    }
+  
     const messagesRef = collection(db, `group_chatrooms/${roomId}/messages`);
-
     await addDoc(messagesRef, {
-      text: msg.text,
+      text: messageText,
       createdAt: serverTimestamp(),
       user: {
         _id: user?.uid,
         name: user?.email || 'Anonymous',
       },
     });
+    setMessages(previousMessages =>
+      GiftedChat.append(previousMessages, [
+        {
+          _id: uuidv4(),
+          text: messageText,
+          createdAt: new Date(),
+          user: {
+            _id: user?.uid || 'anonymous',
+            name: user?.email || 'You',
+          },
+        }
+      ])
+    );
+    
   }, [roomId, user]);
+  
 
   return (
     <SafeAreaView style={styles.container}>
