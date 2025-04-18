@@ -7,6 +7,7 @@ import { getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
 import { RRule } from 'rrule';
 import { configureReanimatedLogger } from 'react-native-reanimated';
+import { IconButton } from 'react-native-paper';
 
 configureReanimatedLogger({
   // Removed invalid property 'disableForMessage' as it does not exist in 'LoggerConfig'
@@ -52,6 +53,8 @@ const Calendar = () => {
   const [showEventModal, setShowEventModal] = useState(false);
   const [eventGroup, setEventGroup] = useState('');
   const [showSaveButton, setShowSaveButton] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+
 
 
   const handleDragCreateStart = (start: OnCreateEventResponse) => {
@@ -143,6 +146,7 @@ const Calendar = () => {
           title: data.title,
           color: data.color,
           type: data.type,
+          location: data.location || '',
           originalId: doc.id,
           linkedGroupChatId: data.linkedGroupChatId || '',
           linkedGroupChatName: data.linkedGroupChatName || '',
@@ -162,6 +166,8 @@ const Calendar = () => {
               id: `${doc.id}_${idx}`,
               start: { dateTime: occurrence.toISOString() },
               end: { dateTime: new Date(occurrence.getTime() + durationMs).toISOString() },
+              location: data.location || '',
+
             });
           });
         } else {
@@ -540,22 +546,71 @@ const Calendar = () => {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <Pressable onPress={() => router.back()}><Text>Go Back</Text></Pressable>
       <>
-        <Button title="Import Timetable" onPress={() => setShowImportModal(true)} />
-        <Button
-          title=" Clear Timetable"
-          onPress={() =>
-            Alert.alert(
-              "Clear Timetable?",
-              "This will delete all academic events.",
-              [
-                { text: "Cancel", style: "cancel" },
-                { text: "Clear", style: "destructive", onPress: clearAcademicTimetable }
-              ]
-            )
-          }
-        />
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 10 }}>
+  <Pressable onPress={() => router.back()}>
+    <Text>Go Back</Text>
+  </Pressable>
+
+  <IconButton
+    icon="dots-vertical"
+    size={28}
+    iconColor="#007AFF"
+    onPress={() => setMenuVisible(true)}
+  />
+</View>
+
+<Modal
+  visible={menuVisible}
+  animationType="fade"
+  transparent
+  onRequestClose={() => setMenuVisible(false)}
+>
+  <TouchableOpacity
+    style={{
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: 'rgba(0,0,0,0.3)',
+    }}
+    onPress={() => setMenuVisible(false)}
+    activeOpacity={1}
+  >
+    <View style={{
+      backgroundColor: '#fff',
+      paddingVertical: 16,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+    }}>
+      <Pressable
+        onPress={() => {
+          setMenuVisible(false);
+          setShowImportModal(true);
+        }}
+        style={{ padding: 16 }}
+      >
+        <Text style={{ fontSize: 16, fontWeight: '500' }}> Import Timetable</Text>
+      </Pressable>
+
+      <Pressable
+        onPress={() => {
+          setMenuVisible(false);
+          Alert.alert(
+            "Clear Timetable?",
+            "This will delete all academic events.",
+            [
+              { text: "Cancel", style: "cancel" },
+              { text: "Clear", style: "destructive", onPress: clearAcademicTimetable }
+            ]
+          );
+        }}
+        style={{ padding: 16 }}
+      >
+        <Text style={{ fontSize: 16, fontWeight: '500' }}> Clear Timetable</Text>
+      </Pressable>
+    </View>
+  </TouchableOpacity>
+</Modal>
+
 
         <Modal visible={showImportModal} animationType="slide" transparent>
           <View
@@ -641,9 +696,10 @@ const Calendar = () => {
               </View>
 
               <Text>🕒 {new Date(selectedEvent?.start?.dateTime).toLocaleString()} → {new Date(selectedEvent?.end?.dateTime).toLocaleString()}</Text>
-              {selectedEvent?.type === 'academic' && (
-                <Text>🏫 Room: {selectedEvent.location || 'N/A'}</Text>
+              {selectedEvent?.location && (
+                <Text>🏫 Room: {selectedEvent.location}</Text>
               )}
+
               {selectedEvent?.linkedGroupChatId ? (
                 <>
                   <Text style={{ marginTop: 10, fontStyle: 'italic' }}>
