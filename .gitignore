@@ -48,3 +48,4 @@ backend/glove.6B.100d.txt
 serviceAccountKey.json
 
 ios/
+android/

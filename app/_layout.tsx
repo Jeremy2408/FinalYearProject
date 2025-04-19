@@ -5,6 +5,8 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { View, ActivityIndicator } from "react-native";
 import { Provider as PaperProvider } from 'react-native-paper';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import TrackPlayer from 'react-native-track-player';
+import trackPlayerService from '../services/trackPlayerService';
 
 
 
@@ -13,6 +15,11 @@ export default function RootLayout() {
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
   const segments = useSegments();
+
+  useEffect(() => {
+  TrackPlayer.registerPlaybackService(() => trackPlayerService);
+}, []);
+
     
   useEffect(() => {
     const subscriber = onAuthStateChanged(auth, (user) => {
@@ -77,6 +84,7 @@ export default function RootLayout() {
       <Stack.Screen name="oauthRedirect" options={{ headerShown: false }} />
       <Stack.Screen name="connectEmail" options={{ headerShown: false }} />
       <Stack.Screen name="(resources)/wellnessResources" options={{ headerShown: false }} />
+      <Stack.Screen name="(relax)/RelaxPlaylistScreen" options={{ headerShown: false }} />
       
 
 

@@ -242,6 +242,7 @@ const Page = () => {
                 <Button title="Chatbot" onPress={() => router.push('/(chatbot)/chat')} />
                 <Button title="Go to Chatrooms" onPress={() => router.push('/(chatroom)/chatRoomList')} />
                 <Button title="Wellness Resources" onPress={() => router.push('/(resources)/wellnessResources')} />
+                <Button title="Relaxing Playlist" onPress={() => router.push('/(relax)/RelaxPlaylistScreen')} />
                 <Button title="Sign Out" onPress={() => auth.signOut()} />
             </View>
             </ScrollView>
