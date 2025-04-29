@@ -7,6 +7,7 @@ import { Provider as PaperProvider } from 'react-native-paper';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import TrackPlayer from 'react-native-track-player';
 import trackPlayerService from '../services/trackPlayerService';
+import { LogBox } from 'react-native';
 
 
 
@@ -18,6 +19,15 @@ export default function RootLayout() {
 
   useEffect(() => {
   TrackPlayer.registerPlaybackService(() => trackPlayerService);
+}, []);
+
+useEffect(() => {
+  LogBox.ignoreLogs([
+    'defaultProps will be removed from function components',
+    'IMGElement: Support for defaultProps',
+    'TNodeChildrenRenderer: Support for defaultProps',
+    ' MemoizedTNodeRenderer: Support for defaultProps',
+  ]);
 }, []);
 
     
@@ -86,6 +96,7 @@ export default function RootLayout() {
       <Stack.Screen name="(resources)/wellnessResources" options={{ headerShown: false }} />
       <Stack.Screen name="(relax)/RelaxPlaylistScreen" options={{ headerShown: false }} />
       <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="(emailview)/viewEmail" options={{ headerShown: false }} />
       
 
 

@@ -136,11 +136,26 @@ export default function ConnectEmail() {
           <View style={{ marginTop: 30 }}>
             <Text style={styles.subheading}>Latest Emails</Text>
             {emails.map((email, idx) => (
-              <View key={idx} style={styles.emailCard}>
-                <Text style={styles.subject}>{email.subject || '(No Subject)'}</Text>
-                <Text>{email.from?.emailAddress?.name || 'Unknown sender'}</Text>
-                <Text style={styles.preview}>{email.bodyPreview?.slice(0, 100)}...</Text>
-              </View>
+              <TouchableOpacity
+                onPress={() =>
+                  router.push({
+                    pathname: '/viewEmail',
+                    params: {
+                      subject: email.subject,
+                      from: email.from?.emailAddress?.name,
+                      body: email.body?.content || email.bodyPreview,
+                      date: email.receivedDateTime,
+                    },
+                  })
+                }
+                key={idx}
+              >
+                <View style={styles.emailCard}>
+                  <Text style={styles.subject}>{email.subject || '(No Subject)'}</Text>
+                  <Text>{email.from?.emailAddress?.name || 'Unknown sender'}</Text>
+                  <Text style={styles.preview}>{email.bodyPreview?.slice(0, 100)}...</Text>
+                </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}
