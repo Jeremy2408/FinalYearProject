@@ -36,6 +36,7 @@ const Page = () => {
     const [esiLoading, setEsiLoading] = useState(true);
     const [isInfoVisible, setInfoVisible] = useState(false);
     const [isEsiInfoVisible, setEsiInfoVisible] = useState(false);
+    const [displayName, setDisplayName] = useState<string | null>(null);
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -173,11 +174,28 @@ const Page = () => {
         fetchQuote();
     }, []);
 
+    useEffect(() => {
+        const fetchDisplayName = async () => {
+            if (!user) return;
+    
+            const db = getFirestore();
+            const docRef = doc(db, "users", user.uid);
+            const snap = await getDoc(docRef);
+            if (snap.exists()) {
+                const data = snap.data();
+                setDisplayName(data.name || null);
+            }
+        };
+    
+        fetchDisplayName();
+    }, [user]);
+    
+
     return (
         <SafeAreaView>
             <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 16 }}>
                 <View>
-                    <Text>{getGreeting()}, {user?.email}</Text>
+                <Text>{getGreeting()}, {displayName || user?.email}</Text>
 
                     <Text style={{ fontStyle: 'italic', marginVertical: 10 }}>💡 {quote}</Text>
                     
