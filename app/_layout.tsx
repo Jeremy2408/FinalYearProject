@@ -85,6 +85,7 @@ export default function RootLayout() {
       <Stack.Screen name="connectEmail" options={{ headerShown: false }} />
       <Stack.Screen name="(resources)/wellnessResources" options={{ headerShown: false }} />
       <Stack.Screen name="(relax)/RelaxPlaylistScreen" options={{ headerShown: false }} />
+      <Stack.Screen name="login" options={{ headerShown: false }} />
       
 
 
