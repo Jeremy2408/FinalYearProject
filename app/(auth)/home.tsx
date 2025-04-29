@@ -1,4 +1,4 @@
-import { View, Text, Button } from "react-native";
+import { View, Text, Button, Pressable } from "react-native";
 import { auth } from '@/FirebaseConfig';
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -7,9 +7,8 @@ import { getFirestore, collection, query, where, getDocs, onSnapshot, orderBy, l
 import { Card } from 'react-native-paper'; 
 import useLiveWeeklyMoodData from '../hooks/useLiveWeeklyMoodData';
 import { ScrollView } from 'react-native';
-
-
-
+import { MaterialIcons } from '@expo/vector-icons';
+import Modal from 'react-native-modal';
 
 interface Event {
     id: string;
@@ -35,7 +34,8 @@ const Page = () => {
     const weeklyData = useLiveWeeklyMoodData();
     const [stabilityData, setStabilityData] = useState<{ stability_index: number, burnout_risk: string } | null>(null);
     const [esiLoading, setEsiLoading] = useState(true);
-
+    const [isInfoVisible, setInfoVisible] = useState(false);
+    const [isEsiInfoVisible, setEsiInfoVisible] = useState(false);
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -43,6 +43,7 @@ const Page = () => {
         if (hour < 18) return 'Good Afternoon';
         return 'Good Evening';
     };
+
     useEffect(() => {
         if (!user) return;
       
@@ -98,8 +99,6 @@ const Page = () => {
         return () => unsubscribe();
       }, [user]);
       
-         
-
     useEffect(() => {
         if (weeklyData.length > 0) {
             const scores = weeklyData.map(item => item.score);
@@ -129,38 +128,36 @@ const Page = () => {
         return () => unsubscribe();
     }, [user]);
 
-
     useEffect(() => {
-        
-            if (!user) return;
+        if (!user) return;
 
-            const db = getFirestore();
-            const now = new Date();
-            const fiveDaysLater = new Date();
-            fiveDaysLater.setDate(now.getDate() + 5); 
+        const db = getFirestore();
+        const now = new Date();
+        const fiveDaysLater = new Date();
+        fiveDaysLater.setDate(now.getDate() + 5); 
 
-            const q = query(
-                collection(db, "users", user.uid, "events"),
-                where("start.dateTime", ">=", now.toISOString()), 
-                where("start.dateTime", "<=", fiveDaysLater.toISOString())
-            );
+        const q = query(
+            collection(db, "users", user.uid, "events"),
+            where("start.dateTime", ">=", now.toISOString()), 
+            where("start.dateTime", "<=", fiveDaysLater.toISOString())
+        );
 
-            const unsubscribe = onSnapshot(q, (querySnapshot) => {
-                const upcomingEvents: Event[] = querySnapshot.docs.map(doc => {
-                    const data = doc.data() as Event;
-                    return {
-                        id: doc.id,
-                        title: data.title,
-                        type: data.type || "Event",
-                        start: data.start
-                    };
-                });
-    
-                setReminders(upcomingEvents);
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const upcomingEvents: Event[] = querySnapshot.docs.map(doc => {
+                const data = doc.data() as Event;
+                return {
+                    id: doc.id,
+                    title: data.title,
+                    type: data.type || "Event",
+                    start: data.start
+                };
             });
-    
-            return () => unsubscribe(); 
-        }, [user]);
+
+            setReminders(upcomingEvents);
+        });
+
+        return () => unsubscribe(); 
+    }, [user]);
 
     useEffect(() => {
         const fetchQuote = async () => {
@@ -178,73 +175,115 @@ const Page = () => {
 
     return (
         <SafeAreaView>
-                <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 16 }}>
+            <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 16 }}>
+                <View>
+                    <Text>{getGreeting()}, {user?.email}</Text>
 
-            <View>
-                <Text>{getGreeting()}, {user?.email}</Text>
-
-                <Text style={{ fontStyle: 'italic', marginVertical: 10 }}>💡 {quote}</Text>
-                
-
-                <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 10 }}>🔔 Upcoming Events:</Text>
-                {reminders.length > 0 ? (
-                    reminders.map((event) => {
-                        const eventDate = new Date(event.start.dateTime);
-                        return (
-                            <Card key={event.id} style={{ margin: 10, padding: 10, backgroundColor: event.type === "exam" ? "#ffcccc" : event.type === "lecture" ? "#ccffcc" : "#cce5ff" }}>
-                            <Text style={{ fontWeight: "bold", fontSize: 16 }}>{event.title} ({event.type})</Text>
-                            <Text>{eventDate.toLocaleDateString()} at {eventDate.toLocaleTimeString()}</Text>
-                        </Card>
-                        );
-                    })
-                ) : (
-                    <Text>No upcoming events in the next 5 days.</Text>
-                )}
-
-                {recentMood && (
-                    <View style={{ backgroundColor: '#e0f7fa', padding: 14, borderRadius: 12, marginBottom: 10 }}>
-                        <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 4 }}> Most Recent Mood</Text>
-                        <Text>Mood: {recentMood.mood}</Text>
-                        <Text>Emotion: {recentMood.emotion}</Text>
-                        <Text>Score: {recentMood.numericSentimentScore > 0 ? '+' : ''}{recentMood.numericSentimentScore.toFixed(2)}</Text>
-                    </View>
-                )}
-                {!esiLoading && stabilityData && (
-                    <View style={{ backgroundColor: '#fff3e0', padding: 16, borderRadius: 12, marginBottom: 10 }}>
-                        <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 4 }}> Emotion Stability Index</Text>
-                        <Text>Stability Score: {stabilityData.stability_index.toFixed(2)}</Text>
-                        <Text>Burnout Risk: {stabilityData.burnout_risk}</Text>
-
-                        {stabilityData.burnout_risk === "High" && (
-                        <Text style={{ color: 'red', fontWeight: 'bold', marginTop: 4 }}>
-                        High risk of burnout — take a break or reflect today.
-                        </Text>
-                        )}
-                    </View>     
-                    )}
-
-
-                <View style={{ backgroundColor: '#f0f4ff', padding: 16, borderRadius: 12, marginBottom: 10 }}>
-                    <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 4 }}> Weekly Mood Summary</Text>
-                    {averageScore !== null ? (
-                        <Text style={{ fontSize: 16 }}>
-                            This week: Average Score {averageScore > 0 ? '+' : ''}{averageScore} — {moodLabel}
-                        </Text>
+                    <Text style={{ fontStyle: 'italic', marginVertical: 10 }}>💡 {quote}</Text>
+                    
+                    <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 10 }}>🔔 Upcoming Events:</Text>
+                    {reminders.length > 0 ? (
+                        reminders.map((event) => {
+                            const eventDate = new Date(event.start.dateTime);
+                            return (
+                                <Card key={event.id} style={{ margin: 10, padding: 10, backgroundColor: event.type === "exam" ? "#ffcccc" : event.type === "lecture" ? "#ccffcc" : "#cce5ff" }}>
+                                <Text style={{ fontWeight: "bold", fontSize: 16 }}>{event.title} ({event.type})</Text>
+                                <Text>{eventDate.toLocaleDateString()} at {eventDate.toLocaleTimeString()}</Text>
+                            </Card>
+                            );
+                        })
                     ) : (
-                        <Text style={{ fontSize: 16 }}>No mood data yet this week.</Text>
+                        <Text>No upcoming events in the next 5 days.</Text>
                     )}
-                </View>
 
-                <Button title="Go to Mood Log" onPress={() => router.push('/(log)/moodLog')} />
-                <Button title="View Mood Analytics" onPress={() => router.push('/(analytics)/moodAnalytics')} />
-                <Button title="Timetable" onPress={() => router.push('/(timetable)/table')} />
-                <Button title="Connect Email" onPress={() => router.push('/connectEmail')}/>
-                <Button title="Chatbot" onPress={() => router.push('/(chatbot)/chat')} />
-                <Button title="Go to Chatrooms" onPress={() => router.push('/(chatroom)/chatRoomList')} />
-                <Button title="Wellness Resources" onPress={() => router.push('/(resources)/wellnessResources')} />
-                <Button title="Relaxing Playlist" onPress={() => router.push('/(relax)/RelaxPlaylistScreen')} />
-                <Button title="Sign Out" onPress={() => auth.signOut()} />
-            </View>
+                    {recentMood && (
+                        <View style={{ backgroundColor: '#e0f7fa', padding: 14, borderRadius: 12, marginBottom: 10 }}>
+                            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 4 }}> Most Recent Mood</Text>
+                            <Text>Mood: {recentMood.mood}</Text>
+                            <Text>Emotion: {recentMood.emotion}</Text>
+                            <Text>Score: {recentMood.numericSentimentScore > 0 ? '+' : ''}{recentMood.numericSentimentScore.toFixed(2)}</Text>
+                        </View>
+                    )}
+
+                    {!esiLoading && stabilityData && (
+                        <View style={{ backgroundColor: '#fff3e0', padding: 16, borderRadius: 12, marginBottom: 10 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                                <Text style={{ fontWeight: 'bold', fontSize: 16 }}>
+                                    Emotion Stability Index
+                                </Text>
+                                <Pressable onPress={() => setEsiInfoVisible(true)} style={{ marginLeft: 6 }}>
+                                    <MaterialIcons name="info-outline" size={18} color="gray" />
+                                </Pressable>
+                            </View>
+                            <Text>Stability Score: {stabilityData.stability_index.toFixed(2)}</Text>
+                            <Text>Burnout Risk: {stabilityData.burnout_risk}</Text>
+
+                            {stabilityData.burnout_risk === "High" && (
+                                <Text style={{ color: 'red', fontWeight: 'bold', marginTop: 4 }}>
+                                    High risk of burnout — take a break or reflect today.
+                                </Text>
+                            )}
+                        </View>
+                    )}
+
+                    <Modal isVisible={isEsiInfoVisible} onBackdropPress={() => setEsiInfoVisible(false)}>
+                        <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
+                            <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 6 }}>
+                                What is the Emotion Stability Index?
+                            </Text>
+                            <Text style={{ fontSize: 14, marginBottom: 10 }}>
+                                The Emotion Stability Index (ESI) measures how emotionally consistent you've been over the past week.
+                                A high score means your emotions have been fluctuating a lot — which can be a sign of stress or burnout risk.
+                                Lower scores suggest more emotional balance.
+                            </Text>
+                            <Text style={{ fontSize: 14, marginBottom: 10 }}>
+                                This is calculated using a weighted mix of emotion variation and how frequently your mood shifts. Based on this score, the app also estimates your risk of burnout.
+                            </Text>
+                            <Button title="Got it" onPress={() => setEsiInfoVisible(false)} />
+                        </View>
+                    </Modal>
+
+                    <View style={{ backgroundColor: '#f0f4ff', padding: 16, borderRadius: 12, marginBottom: 10 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                            <Text style={{ fontWeight: 'bold', fontSize: 16 }}>
+                                Weekly Mood Summary (Past 7 Days)
+                            </Text>
+                            <Pressable onPress={() => setInfoVisible(true)} style={{ marginLeft: 6 }}>
+                                <MaterialIcons name="info-outline" size={18} color="gray" />
+                            </Pressable>
+                        </View>
+
+                        {averageScore !== null ? (
+                            <Text style={{ fontSize: 16 }}>
+                                This week: Average Score {averageScore > 0 ? '+' : ''}{averageScore} — {moodLabel}
+                            </Text>
+                        ) : (
+                            <Text style={{ fontSize: 16 }}>No mood data yet this week.</Text>
+                        )}
+                    </View>
+
+                    <Modal isVisible={isInfoVisible} onBackdropPress={() => setInfoVisible(false)}>
+                        <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
+                            <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 6 }}>
+                                What's this?
+                            </Text>
+                            <Text style={{ fontSize: 14 }}>
+                                This summary shows your average mood score from the last 7 calendar days. It’s a quick emotional snapshot for recent days.
+                            </Text>
+                            <Button title="Got it" onPress={() => setInfoVisible(false)} />
+                        </View>
+                    </Modal>
+
+                    <Button title="Go to Mood Log" onPress={() => router.push('/(log)/moodLog')} />
+                    <Button title="View Mood Analytics" onPress={() => router.push('/(analytics)/moodAnalytics')} />
+                    <Button title="Timetable" onPress={() => router.push('/(timetable)/table')} />
+                    <Button title="Connect Email" onPress={() => router.push('/connectEmail')}/>
+                    <Button title="Chatbot" onPress={() => router.push('/(chatbot)/chat')} />
+                    <Button title="Go to Chatrooms" onPress={() => router.push('/(chatroom)/chatRoomList')} />
+                    <Button title="Wellness Resources" onPress={() => router.push('/(resources)/wellnessResources')} />
+                    <Button title="Relaxing Playlist" onPress={() => router.push('/(relax)/RelaxPlaylistScreen')} />
+                    <Button title="Sign Out" onPress={() => auth.signOut()} />
+                </View>
             </ScrollView>
         </SafeAreaView>
     );

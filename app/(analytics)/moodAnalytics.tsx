@@ -7,7 +7,8 @@ import { router } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import BackButton from '../../components/BackButton';
-
+import { MaterialIcons } from '@expo/vector-icons';
+import Modal from 'react-native-modal';
 
 const exportMoodDataAsCSV = async (moodData: { label: string, score: number }[]) => {
   const csvContent = [
@@ -32,6 +33,7 @@ const MoodAnalytics = () => {
   const dailyData = useDailyMoodData();
   const weeklyData = useWeeklyMoodData();
   const monthlyData = useMonthlyMoodData();
+  const [isInfoVisible, setInfoVisible] = useState(false);
 
   const moodData =
     viewMode === 'daily'
@@ -58,9 +60,14 @@ const MoodAnalytics = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-        <BackButton />
+      <BackButton />
 
-      <Text style={styles.title}>Mood Trends Over Time</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+        <Text style={styles.title}>Mood Trends Over Time</Text>
+        <Pressable onPress={() => setInfoVisible(true)} style={{ marginLeft: 6 }}>
+          <MaterialIcons name="info-outline" size={22} color="gray" />
+        </Pressable>
+      </View>
 
       <View style={styles.toggleContainer}>
         <Button title="Daily" onPress={() => setViewMode('daily')} />
@@ -70,13 +77,19 @@ const MoodAnalytics = () => {
 
       {average !== 'N/A' && (
         <View style={styles.summaryBox}>
-          <Text style={styles.summaryTitle}> {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)} Summary</Text>
+          <Text style={styles.summaryTitle}>
+            {viewMode === 'daily'
+              ? 'Daily Trends (All Days)'
+              : viewMode === 'weekly'
+              ? 'Weekly Trends (Calendar Weeks)'
+              : 'Monthly Trends'}
+          </Text>
           <Text style={styles.summaryText}>
-            Avg Score: {avgNum > 0 ? '+' : ''}{average} — {moodLabel}
+            Avg of {moodData.length} {viewMode} entries: {avgNum > 0 ? '+' : ''}
+            {average} — {moodLabel}
           </Text>
         </View>
       )}
-
 
       {validData && dataPoints.length > 0 ? (
         <LineChart
@@ -100,11 +113,27 @@ const MoodAnalytics = () => {
           style={styles.graphStyle}
         />
       ) : (
-<Text style={{ marginVertical: 20 }}>No valid mood data available yet.</Text>
-      )}      
-      
+        <Text style={{ marginVertical: 20 }}>No valid mood data available yet.</Text>
+      )}
+
       <Button title="Export CSV Report" onPress={() => exportMoodDataAsCSV(moodData)} />
 
+      <Modal isVisible={isInfoVisible} onBackdropPress={() => setInfoVisible(false)}>
+        <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 6 }}>
+            What do these trends mean?
+          </Text>
+          <Text style={{ fontSize: 14, marginBottom: 10 }}>
+            {viewMode === 'daily' &&
+              'This shows your average mood score for each day you logged a mood. The summary reflects the average of all those daily scores.'}
+            {viewMode === 'weekly' &&
+              'This groups mood entries by calendar week (Sunday to Saturday), helping you spot weekly emotional patterns.'}
+            {viewMode === 'monthly' &&
+              'This aggregates your mood scores for each calendar month, showing broader mood trends over time.'}
+          </Text>
+          <Button title="Got it" onPress={() => setInfoVisible(false)} />
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
