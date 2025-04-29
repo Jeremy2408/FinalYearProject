@@ -91,7 +91,7 @@ const RelaxPlaylistScreen = () => {
       return {
         id: data.uri,
         url: data.uri,
-        title: data.title,
+        title: data.title || '',
         artist: 'Relaxation',
         artwork: appLogo,
       };
@@ -107,9 +107,21 @@ const RelaxPlaylistScreen = () => {
     const combined = [...userTracks, ...defaultTracks];
     setPlaylist(combined);
 
-    await TrackPlayer.reset();
-    await TrackPlayer.add(combined);
-    setCurrentTrack(combined[0]);
+    const currentQueue = await TrackPlayer.getQueue();
+    if (currentQueue.length === 0) {
+      await TrackPlayer.add(combined);
+      setCurrentTrack(combined[0]);
+    } else {
+      const index = await TrackPlayer.getCurrentTrack();
+      const queue = await TrackPlayer.getQueue();
+      if (index !== null) {
+        const track = queue[index];
+        setCurrentTrack({
+          title: track.title || 'Unknown Title',
+          url: track.url || '',
+        });
+      }
+    }
   };
 
   const playTrack = async (track: { title: string; url: string }) => {
@@ -131,7 +143,22 @@ const RelaxPlaylistScreen = () => {
 
   const skipForward = async () => {
     try {
-      await TrackPlayer.skipToNext();
+      if (isShuffle) {
+        const queue = await TrackPlayer.getQueue();
+        const currentIndex = await TrackPlayer.getCurrentTrack();
+
+        const otherIndices = queue
+          .map((_, i) => i)
+          .filter((i) => i !== currentIndex);
+
+        if (otherIndices.length > 0) {
+          const randomIndex = otherIndices[Math.floor(Math.random() * otherIndices.length)];
+          await TrackPlayer.skip(randomIndex);
+        }
+      } else {
+        await TrackPlayer.skipToNext();
+      }
+
       await TrackPlayer.play();
       const index = await TrackPlayer.getCurrentTrack();
       const queue = await TrackPlayer.getQueue();
