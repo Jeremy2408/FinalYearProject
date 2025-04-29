@@ -9,6 +9,9 @@ import * as Sharing from 'expo-sharing';
 import BackButton from '../../components/BackButton';
 import { MaterialIcons } from '@expo/vector-icons';
 import Modal from 'react-native-modal';
+import { ScrollView } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
+
 
 const exportMoodDataAsCSV = async (moodData: { label: string, score: number }[]) => {
   const csvContent = [
@@ -43,6 +46,10 @@ const MoodAnalytics = () => {
       : monthlyData;
 
   const labels = moodData.map(item => item.label);
+  const displayLabels = labels.map((label, index) => {
+    if (viewMode === 'monthly') return label; 
+    return index % 3 === 0 ? label : ''; 
+  });
   const dataPoints = moodData.map(item => item.score);
   const validData = dataPoints.every(point => !isNaN(point));
 
@@ -92,26 +99,37 @@ const MoodAnalytics = () => {
       )}
 
       {validData && dataPoints.length > 0 ? (
-        <LineChart
-          data={{
-            labels: labels,
-            datasets: [{ data: dataPoints }],
-          }}
-          width={Dimensions.get('window').width - 16}
-          height={250}
-          yAxisInterval={0.5}
-          chartConfig={{
-            backgroundColor: '#ffffff',
-            backgroundGradientFrom: '#f0f4ff',
-            backgroundGradientTo: '#f0f4ff',
-            decimalPlaces: 2,
-            color: (opacity = 1) => `rgba(55, 83, 255, ${opacity})`,
-            labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-            propsForDots: { r: "5", strokeWidth: "2", stroke: "#4A90E2" },
-          }}
-          bezier
-          style={styles.graphStyle}
-        />
+        <View style={styles.chartWrapper}>
+          <Animated.View entering={FadeIn.duration(600)}>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={{ padding: 10, borderRadius: 16, backgroundColor: '#f0f4ff' }}>
+              <LineChart
+                data={{
+                  labels: labels.map((label, i) =>
+                    viewMode === 'monthly' ? label : i % 3 === 0 ? label : ''
+                  ),
+                  datasets: [{ data: dataPoints }],
+                }}
+                width={Math.max(labels.length * 50, Dimensions.get('window').width)}
+                height={250}
+                yAxisInterval={0.5}
+                chartConfig={{
+                  backgroundColor: '#ffffff',
+                  backgroundGradientFrom: '#f0f4ff',
+                  backgroundGradientTo: '#f0f4ff',
+                  decimalPlaces: 2,
+                  color: (opacity = 1) => `rgba(55, 83, 255, ${opacity})`,
+                  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                  propsForDots: { r: "5", strokeWidth: "2", stroke: "#4A90E2" },
+                }}
+                bezier
+                style={{ borderRadius: 16 }}
+              />
+            </View>
+          </ScrollView>
+          </Animated.View>
+        </View>
       ) : (
         <Text style={{ marginVertical: 20 }}>No valid mood data available yet.</Text>
       )}
@@ -174,6 +192,11 @@ const styles = StyleSheet.create({
   summaryText: {
     fontSize: 15,
   },
+  chartWrapper: {
+    width: '100%',
+    marginTop: 16,
+  }
+  
 });
 
 export default MoodAnalytics;
