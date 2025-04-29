@@ -59,6 +59,11 @@ const GroupChatList = () => {
       Alert.alert('Please enter a group name.');
       return;
     }
+    const isDuplicate = groups.some(group => group.name.toLowerCase() === roomName.trim().toLowerCase());
+    if (isDuplicate) {
+      Alert.alert('A group with this name already exists.');
+      return;
+    }
 
     const newGroupRef = doc(collection(db, 'group_chatrooms'));
     const groupId = newGroupRef.id;
@@ -68,7 +73,6 @@ const GroupChatList = () => {
       createdBy: user?.uid,
       createdAt: serverTimestamp(),
       members: [user?.uid], 
-
     });
 
     await setDoc(doc(db, `group_chatrooms/${groupId}/members/${user?.uid}`), {
@@ -107,7 +111,22 @@ const GroupChatList = () => {
     const inviteeDoc = snapshot.docs[0];
     const inviteeUid = inviteeDoc.id;
 
-    await setDoc(doc(db, `users/${inviteeUid}/invitations/${selectedGroupId}`), {
+    const memberRef = doc(db, `group_chatrooms/${selectedGroupId}/members/${inviteeUid}`);
+    const memberSnap = await getDoc(memberRef);
+    if (memberSnap.exists()) {
+      Alert.alert('This user is already a member of the group.');
+      return;
+    }
+
+    const inviteRef = doc(db, `users/${inviteeUid}/invitations/${selectedGroupId}`);
+    const inviteSnap = await getDoc(inviteRef);
+
+    if (inviteSnap.exists() && inviteSnap.data().status === 'pending') {
+      Alert.alert('This user has already been invited.');
+      return;
+    }
+
+    await setDoc(inviteRef, {
       from: user?.email,
       roomName: selectedGroupName,
       canInvite: inviteCanInvite,
