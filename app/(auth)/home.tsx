@@ -1,4 +1,4 @@
-import { View, Text, Button, Pressable } from "react-native";
+import { View, Text, Button, Pressable, FlexAlignType, FlatList, Dimensions } from "react-native";
 import { auth } from '@/FirebaseConfig';
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -7,8 +7,9 @@ import { getFirestore, collection, query, where, getDocs, onSnapshot, orderBy, l
 import { Card } from 'react-native-paper'; 
 import useLiveWeeklyMoodData from '../hooks/useLiveWeeklyMoodData';
 import { ScrollView } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Modal from 'react-native-modal';
+import { StyleSheet } from 'react-native';
 
 interface Event {
     id: string;
@@ -22,6 +23,8 @@ interface MoodLog {
     numericSentimentScore: number;
     timestamp: { seconds: number; nanoseconds: number; };
 }
+
+const screenWidth = Dimensions.get('window').width;
 
 const Page = () => {
     const [reminders, setReminders] = useState<Event[]>([]);
@@ -199,20 +202,35 @@ const Page = () => {
 
                     <Text style={{ fontStyle: 'italic', marginVertical: 10 }}>💡 {quote}</Text>
                     
-                    <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 10 }}>🔔 Upcoming Events:</Text>
-                    {reminders.length > 0 ? (
-                        reminders.map((event) => {
-                            const eventDate = new Date(event.start.dateTime);
-                            return (
-                                <Card key={event.id} style={{ margin: 10, padding: 10, backgroundColor: event.type === "exam" ? "#ffcccc" : event.type === "lecture" ? "#ccffcc" : "#cce5ff" }}>
-                                <Text style={{ fontWeight: "bold", fontSize: 16 }}>{event.title} ({event.type})</Text>
-                                <Text>{eventDate.toLocaleDateString()} at {eventDate.toLocaleTimeString()}</Text>
-                            </Card>
-                            );
-                        })
-                    ) : (
-                        <Text>No upcoming events in the next 5 days.</Text>
-                    )}
+                    <View style={{ marginBottom: 24 }}>
+                        <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 10 }}>🔔 Upcoming Events:</Text>
+                        {reminders.length > 0 ? (
+                            <FlatList
+                                data={reminders}
+                                keyExtractor={(item) => item.id}
+                                horizontal
+                                pagingEnabled
+                                showsHorizontalScrollIndicator={false}
+                                renderItem={({ item }) => {
+                                    const eventDate = new Date(item.start.dateTime);
+                                    return (
+                                        <Card style={{
+                                            width: screenWidth * 0.9,
+                                            marginHorizontal: screenWidth * 0.05,
+                                            padding: 16,
+                                            backgroundColor: item.type === "exam" ? "#ffcccc" :
+                                                            item.type === "lecture" ? "#ccffcc" : "#cce5ff"
+                                        }}>
+                                            <Text style={{ fontWeight: "bold", fontSize: 16 }}>{item.title} ({item.type})</Text>
+                                            <Text>{eventDate.toLocaleDateString()} at {eventDate.toLocaleTimeString()}</Text>
+                                        </Card>
+                                    );
+                                }}
+                            />
+                        ) : (
+                            <Text>No upcoming events in the next 5 days.</Text>
+                        )}
+                    </View>
 
                     {recentMood && (
                         <View style={{ backgroundColor: '#e0f7fa', padding: 14, borderRadius: 12, marginBottom: 10 }}>
@@ -292,19 +310,53 @@ const Page = () => {
                         </View>
                     </Modal>
 
-                    <Button title="Go to Mood Log" onPress={() => router.push('/(log)/moodLog')} />
-                    <Button title="View Mood Analytics" onPress={() => router.push('/(analytics)/moodAnalytics')} />
-                    <Button title="Timetable" onPress={() => router.push('/(timetable)/table')} />
-                    <Button title="Connect Email" onPress={() => router.push('/connectEmail')}/>
-                    <Button title="Chatbot" onPress={() => router.push('/(chatbot)/chat')} />
-                    <Button title="Go to Chatrooms" onPress={() => router.push('/(chatroom)/chatRoomList')} />
-                    <Button title="Wellness Resources" onPress={() => router.push('/(resources)/wellnessResources')} />
-                    <Button title="Relaxing Playlist" onPress={() => router.push('/(relax)/RelaxPlaylistScreen')} />
-                    <Button title="Sign Out" onPress={() => auth.signOut()} />
+                    <View style={styles.tileGrid}>
+                        {[
+                            { label: 'Mood Log', icon: 'emoticon-outline' as const, route: '/(log)/moodLog' },
+                            { label: 'Playlist', icon: 'music' as const, route: '/(relax)/RelaxPlaylistScreen' },
+                            { label: 'Chatbot', icon: 'chat-outline' as const, route: '/(chatbot)/chat' },
+                            { label: 'Timetable', icon: 'calendar-outline' as const, route: '/(timetable)/table' },
+                            { label: 'Wellness', icon: 'heart-outline' as const, route: '/(resources)/wellnessResources' },
+                            { label: 'More', icon: 'dots-horizontal' as const, route: '/more' },
+                        ].map((item, index) => (
+                            <Pressable
+                                key={index}
+                                style={styles.tile}
+                                onPress={() => router.push(item.route as typeof router.push extends (path: infer P) => any ? P : never)}
+                            >
+                                <MaterialCommunityIcons name={item.icon} size={32} color="#333" />
+                                <Text style={styles.tileLabel}>{item.label}</Text>
+                            </Pressable>
+                        ))}
+                    </View>
                 </View>
             </ScrollView>
         </SafeAreaView>
     );
 };
+
+
+const styles = StyleSheet.create({
+    tileGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        marginTop: 20,
+    },
+    tile: {
+        width: '47%',
+        aspectRatio: 1,
+        backgroundColor: '#e0e7ff',
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    tileLabel: {
+        marginTop: 8,
+        fontSize: 16,
+        fontWeight: "600",
+    },
+});
 
 export default Page;
