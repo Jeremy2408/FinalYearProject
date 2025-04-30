@@ -1,126 +1,55 @@
-import { Text, View, StyleSheet, KeyboardAvoidingView, TextInput, Button, ActivityIndicator, Pressable } from "react-native";
-import { useState } from "react";
-import { FIREBASE_AUTH, FIREBASE_DB } from "@/FirebaseConfig";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from "firebase/firestore";
-import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Image, Animated } from 'react-native';
+import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import colors from '@/colors';
 
-export default function Index() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+const appLogo = require('../assets/images/appLogo.png');
 
-  const [loading, setLoading] = useState(false);
-  const auth = FIREBASE_AUTH;
-  const db = FIREBASE_DB;
+export default function SplashScreen() {
   const router = useRouter();
+  const opacity = new Animated.Value(0);
 
-  const signUp = async () => {
-    if (password !== confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
-    setLoading(true);
-    try {
-      const response = await createUserWithEmailAndPassword(auth, email, password);
-      console.log(response);
-      await setDoc(doc(db, "users", response.user.uid), {
-        name: name,
-        email: email,
-        createdAt: new Date()
-      });
-      alert('User created');
-    } catch (e: any) {
-      alert('Registration Failed: ' + e.message);    
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    Animated.timing(opacity, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
 
-  const signIn = async () => {
-    setLoading(true);
-    try {
-      const response = await signInWithEmailAndPassword(auth, email, password);
-      console.log(response);
-    } catch (e: any) {
-      alert('Sign In Failed: ' + e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const timer = setTimeout(() => {
+      router.replace('/signup');
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
-
-    <View style={styles.container}>
-    <KeyboardAvoidingView behavior="padding">
-    <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="Name"
-          placeholderTextColor="#000"
-        />
-      <TextInput
-        style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        placeholder="Email"
-        placeholderTextColor="#000"
-      />
-      <TextInput
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        placeholder="Password"
-        placeholderTextColor="#000"
-      />
-        <TextInput
-          style={styles.input}
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-          placeholder="Confirm Password"
-          placeholderTextColor="#000"
-        />
-
-      {loading ? (
-        <ActivityIndicator size="small" style={{ margin: 28 }} />
-      ) : (
-        <>
-          <Button onPress={signUp} title="Create account" />
-          <Pressable onPress={() => router.push('/login')}>
-            <Text style={styles.loginLink}>Already have an account? Log in</Text>
-          </Pressable>
-        </>
-      )}
-    </KeyboardAvoidingView>
-  </View>
+    <LinearGradient
+      colors={[colors.gradientStart, colors.gradientEnd]}
+      style={styles.container}
+    >
+      <Animated.Image source={appLogo} style={[styles.logo, { opacity }]} />
+      <Animated.Text style={[styles.text, { opacity }]}>Your wellness journey starts here</Animated.Text>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-container: {
-marginHorizontal: 20,
+  container: {
     flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  input: {
-  marginVertical: 4,
-  height: 50,
-  borderWidth: 1,
-  borderRadius: 4,
-  padding: 10,
-  backgroundColor: '#fff',
+  logo: {
+    width: 265,
+    height: 265,
+    resizeMode: 'contain',
+    marginBottom: 20,
   },
-  loginLink: {
-    marginTop: 15,
-    textAlign: 'center',
-    color: '#007AFF',
-    textDecorationLine: 'underline',
-  }
+  text: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: colors.text,
+  },
 });

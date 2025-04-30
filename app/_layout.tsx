@@ -97,6 +97,7 @@ useEffect(() => {
       <Stack.Screen name="(relax)/RelaxPlaylistScreen" options={{ headerShown: false }} />
       <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="(emailview)/viewEmail" options={{ headerShown: false }} />
+      <Stack.Screen name="signup" options={{ headerShown: false }} />
       
 
 
