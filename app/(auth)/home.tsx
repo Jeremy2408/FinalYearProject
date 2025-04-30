@@ -30,6 +30,14 @@ interface MoodLog {
 
 const screenWidth = Dimensions.get('window').width;
 
+export const unstable_settings = {
+    initialRouteName: '/',
+  };
+  
+  export const screenOptions = {
+    gestureEnabled: false, 
+  };
+  
 const Page = () => {
     const [reminders, setReminders] = useState<Event[]>([]);
     const [quote, setQuote] = useState("Fetching your daily quote...");

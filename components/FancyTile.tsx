@@ -9,18 +9,24 @@ interface FancyTileProps {
   icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   onPress: () => void;
   iconSize?: number;
+  customIcon?: React.ReactNode; 
+
   fontSize?: number;
   allowWrap?: boolean;
 }
 
-const FancyTile = ({ label, icon, onPress, iconSize, fontSize, allowWrap }: FancyTileProps) => {
+const FancyTile = ({ label, icon, onPress, iconSize, fontSize, allowWrap, customIcon }: FancyTileProps) => {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [
       styles.wrapper,
       { transform: [{ scale: pressed ? 0.97 : 1 }] }
     ]}>
       <BlurView intensity={40} tint="light" style={styles.tile}>
+      {customIcon ? (
+          customIcon 
+        ) : (
         <MaterialCommunityIcons name={icon} size={iconSize ?? 28} color={colors.text} />
+      )}
         <Text
           style={[styles.label, { fontSize: fontSize ?? 14 }]}
           numberOfLines={allowWrap ? undefined : 1}

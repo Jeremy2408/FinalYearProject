@@ -1,10 +1,12 @@
 import React from 'react';
-import { ScrollView, View, StyleSheet, Linking } from 'react-native';
+import { ScrollView, View, StyleSheet, Linking, Text, Pressable } from 'react-native';
 import { Card, Paragraph, Button } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BackButton from '../../components/BackButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import colors from '@/colors';
+import FancyCard from '@/components/FancyCard';
+
 
 type ResourceItem = {
   title: string;
@@ -54,15 +56,20 @@ const WellnessResources = () => {
       <BackButton />
       <ScrollView contentContainerStyle={styles.container}>
         {resources.map((item, index) => (
-          <Card key={index} style={styles.card}>
-            <Card.Content>
-              <Paragraph style={styles.title}>{item.title}</Paragraph>
-              <Paragraph style={styles.description}>{item.description}</Paragraph>
-            </Card.Content>
-            <Card.Actions>
-              <Button onPress={() => handleOpenLink(item.url)}>Learn More</Button>
-            </Card.Actions>
-          </Card>
+         <FancyCard
+         key={index}
+         title={item.title}
+         icon="heart-outline"
+         style={{ marginBottom: 16 }}
+       >
+         <Text style={styles.description}>{item.description}</Text>
+         <Pressable onPress={() => handleOpenLink(item.url)} style={{ marginTop: 10 }}>
+           <Text style={{ color: colors.primary, fontWeight: '600', textDecorationLine: 'underline' }}>
+             Learn More
+           </Text>
+         </Pressable>
+       </FancyCard>
+       
         ))}
       </ScrollView>
     </SafeAreaView>

@@ -6,6 +6,9 @@ import { auth } from '@/FirebaseConfig';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import BackButton from '@/components/BackButton';
+import { LinearGradient } from 'expo-linear-gradient';
+import colors from '@/colors';
+import FancyCard from '@/components/FancyCard';
 
 const GroupChatList = () => {
   const [groups, setGroups] = useState<{ id: string; name: string; canInvite: boolean }[]>([]);
@@ -141,6 +144,10 @@ const GroupChatList = () => {
   };
 
   return (
+    <LinearGradient
+    colors={[colors.gradientStart, colors.gradientEnd]}
+    style={{ flex: 1 }}
+  >
     <SafeAreaView style={styles.container}>
        <BackButton />
       
@@ -160,19 +167,21 @@ const GroupChatList = () => {
         data={groups}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
-          <View style={styles.groupRow}>
-            <Pressable
-              style={styles.groupCard}
-              onPress={() => router.push({ pathname: '/(chatroom)/groupChatRoom', params: { roomId: item.id } })}
-            >
-              <Text style={styles.groupName}>{item.name}</Text>
-            </Pressable>
-            {item.canInvite && (
-              <Pressable style={styles.inviteIcon} onPress={() => openInviteModal(item.id, item.name)}>
-                <Ionicons name="person-add" size={24} color="#007AFF" />
+          <FancyCard title={item.name} icon="account-group" style={{ marginBottom: 12 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Pressable onPress={() => router.push({ pathname: '/(chatroom)/groupChatRoom', params: { roomId: item.id } })}>
+                <Text style={{ color: colors.primary, fontWeight: '600', textDecorationLine: 'underline' }}>
+                  Enter Chat
+                </Text>
               </Pressable>
-            )}
-          </View>
+
+              {item.canInvite && (
+                <Pressable onPress={() => openInviteModal(item.id, item.name)}>
+                  <Ionicons name="person-add" size={22} color={colors.primary} />
+                </Pressable>
+              )}
+            </View>
+          </FancyCard>
         )}
       />
 
@@ -216,13 +225,13 @@ const GroupChatList = () => {
         </View>
       </Modal>
     </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     padding: 16,
   },
   headerRow: {

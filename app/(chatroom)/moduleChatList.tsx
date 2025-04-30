@@ -5,6 +5,9 @@ import { auth } from '@/FirebaseConfig';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BackButton from '@/components/BackButton';
+import { LinearGradient } from 'expo-linear-gradient';
+import colors from '@/colors';
+import FancyCard from '@/components/FancyCard';
 
 const ModuleChatList = () => {
   const [moduleName, setModuleName] = useState('');
@@ -49,43 +52,64 @@ const ModuleChatList = () => {
   };
 
   return (
+    <LinearGradient
+    colors={[colors.gradientStart, colors.gradientEnd]}
+    style={{ flex: 1 }}
+  >
     <SafeAreaView style={styles.container}>
        <BackButton />
         
       <Text style={styles.title}> Module Chatrooms</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Enter module name "
-        value={moduleName}
-        onChangeText={setModuleName}
-        autoCapitalize="characters"
-      />
-      <Pressable style={styles.button} onPress={handleJoinOrCreate}>
-        <Text style={styles.buttonText}>Join/Create</Text>
-      </Pressable>
+        <TextInput
+          style={{
+            backgroundColor: '#fff',
+            padding: 14,
+            fontSize: 16,
+            borderRadius: 12,
+            elevation: 2,
+            shadowColor: colors.black,
+            shadowOpacity: 0.05,
+            shadowRadius: 4,
+            marginBottom: 12,
+          }}
+          placeholder="Enter module name"
+          value={moduleName}
+          onChangeText={setModuleName}
+          autoCapitalize="characters"
+        />
 
-      <Text style={styles.subtitle}>Active Module Chatrooms:</Text>
-      <FlatList
-        data={existingRooms}
-        keyExtractor={item => item.id}
-        renderItem={({ item }) => (
-          <Pressable
-            style={styles.roomCard}
-            onPress={() => router.push({ pathname: '/(chatroom)/moduleChatRoom', params: { roomId: item.id } })}
-          >
-            <Text style={styles.roomName}>{item.name}</Text>
-          </Pressable>
+        <Pressable style={styles.button} onPress={handleJoinOrCreate}>
+          <Text style={styles.buttonText}>Join / Create</Text>
+        </Pressable>
+
+
+        <Text style={styles.subtitle}>Active Module Chatrooms:</Text>
+        <FlatList
+          data={existingRooms}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => (
+            <FancyCard title={item.name} icon="book-open-outline" style={{ marginBottom: 12 }}>
+              <Pressable
+                onPress={() =>
+                  router.push({ pathname: '/(chatroom)/moduleChatRoom', params: { roomId: item.id } })
+                }
+              >
+                <Text style={{ color: colors.primary, fontWeight: '600', textDecorationLine: 'underline' }}>
+                  Enter Chat
+                </Text>
+              </Pressable>
+            </FancyCard> 
         )}
       />
     </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     padding: 16,
   },
   title: {

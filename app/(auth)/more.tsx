@@ -10,6 +10,8 @@ import FancyCard from '@/components/FancyCard';
 import { LinearGradient } from 'expo-linear-gradient';
 import colors from '@/colors';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import Ionicons from '@expo/vector-icons/Ionicons'; 
+
 
 const MoreScreen = () => {
   const router = useRouter();
@@ -43,9 +45,12 @@ const MoreScreen = () => {
     fetchName();
   }, []);
 
-  const items: { label: string; icon: React.ComponentProps<typeof MaterialCommunityIcons>['name']; route?: string; action?: () => void }[] = [
-    { label: 'Connect Email', icon: 'email', route: '/connectEmail' },
-    { label: 'Chatrooms', icon: 'chat', route: '/(chatroom)/chatRoomList' },
+  const items: { label: string; icon?: React.ComponentProps<typeof MaterialCommunityIcons>['name']; customIcon?: JSX.Element; route?: string; action?: () => void }[] = [
+    {
+      label: 'Connect Email',
+      customIcon: <Ionicons name="logo-microsoft" size={32} color="#0078D4" />, 
+      route: '/connectEmail',
+    },    { label: 'Chatrooms', icon: 'chat', route: '/(chatroom)/chatRoomList' },
     { label: 'Sign Out', icon: 'logout', action: handleSignOut },
   ];
 
@@ -65,7 +70,8 @@ const MoreScreen = () => {
           <FancyTile
             key={index}
             label={item.label}
-            icon={item.icon}
+            icon={item.icon || 'blank'}
+            customIcon={item.customIcon}
             iconSize={32}
             fontSize={16}
             allowWrap={false}

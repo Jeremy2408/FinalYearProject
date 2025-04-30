@@ -4,6 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth } from '@/FirebaseConfig';
 import { getFirestore, collection, getDocs, doc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'expo-router';
+import BackButton from '@/components/BackButton';
+import { LinearGradient } from 'expo-linear-gradient';
+import colors from '@/colors';
+import FancyCard from '@/components/FancyCard';
 
 interface Invite {
   id: string;
@@ -53,7 +57,12 @@ const GroupInvites = () => {
   };
 
   return (
+    <LinearGradient
+      colors={[colors.gradientStart, colors.gradientEnd]}
+      style={{ flex: 1 }}
+    >
     <SafeAreaView style={styles.container}>
+      <BackButton />
       <Text style={styles.title}>📨 Group Invitations</Text>
       {invites.length === 0 ? (
         <Text style={styles.empty}>You have no pending invites.</Text>
@@ -62,24 +71,24 @@ const GroupInvites = () => {
           data={invites}
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
-            <View style={styles.card}>
-              <Text style={styles.roomName}>{item.roomName}</Text>
-              <Text style={styles.fromText}>Invited by: {item.from}</Text>
-              <Pressable style={styles.acceptButton} onPress={() => handleAccept(item)}>
-                <Text style={styles.acceptText}>Accept</Text>
-              </Pressable>
-            </View>
+            <FancyCard title={item.roomName} icon="email-outline" style={{ marginBottom: 12 }}>
+            <Text style={styles.fromText}>Invited by: {item.from}</Text>
+            <Pressable style={styles.acceptButton} onPress={() => handleAccept(item)}>
+              <Text style={styles.acceptText}>Accept</Text>
+            </Pressable>
+          </FancyCard>
+          
           )}
         />
       )}
     </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     padding: 16,
   },
   title: {
