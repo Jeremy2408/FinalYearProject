@@ -6,6 +6,7 @@ import { auth } from '@/FirebaseConfig';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import BackButton from '@/components/BackButton';
 import Animated, { FadeInUp } from 'react-native-reanimated';
+import FancyTile from '@/components/FancyTile';
 
 const MoreScreen = () => {
   const router = useRouter();
@@ -23,7 +24,6 @@ const MoreScreen = () => {
 
   const items: { label: string; icon: React.ComponentProps<typeof MaterialCommunityIcons>['name']; route?: string; action?: () => void }[] = [
     { label: 'Connect Email', icon: 'email', route: '/connectEmail' },
-    { label: 'Mood Analytics', icon: 'chart-line', route: '/(analytics)/moodAnalytics' },
     { label: 'Chatrooms', icon: 'chat', route: '/(chatroom)/chatRoomList' },
     { label: 'Sign Out', icon: 'logout', action: handleSignOut },
   ];
@@ -34,19 +34,28 @@ const MoreScreen = () => {
       <Text style={styles.heading}>⚙️ More</Text>
       <View style={styles.tileGrid}>
         {items.map((item, index) => (
-          <Animated.View
+          <FancyTile
             key={index}
-            entering={FadeInUp.duration(600).delay(index * 100)}
-            style={styles.tile}
-          >
-            <Pressable
-              onPress={() => item.route ? router.push(item.route as typeof router.push extends (path: infer P) => any ? P : never) : item.action?.()}
-            >
-              <MaterialCommunityIcons name={item.icon} size={32} color="#333" />
-              <Text style={styles.tileLabel}>{item.label}</Text>
-            </Pressable>
-          </Animated.View>
+            label={item.label}
+            icon={item.icon}
+            iconSize={32}
+            fontSize={16} 
+            allowWrap={false} 
+            onPress={() =>
+              item.route
+                ? router.push(item.route as typeof router.push extends (path: infer P) => any ? P : never)
+                : item.action?.()
+            }
+          />
         ))}
+        <FancyTile
+          label="Mood Analytics"
+          icon="chart-line"
+          iconSize={32} 
+          fontSize={16} 
+          allowWrap={true}
+          onPress={() => router.push('/(analytics)/moodAnalytics')}
+        />
       </View>
     </SafeAreaView>
   );

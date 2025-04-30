@@ -12,6 +12,8 @@ import Modal from 'react-native-modal';
 import { StyleSheet } from 'react-native';
 import colors from '@/colors';
 import { LinearGradient } from 'expo-linear-gradient';
+import FancyTile from '@/components/FancyTile';
+import FancyCard from '@/components/FancyCard';
 
 interface Event {
     id: string;
@@ -204,59 +206,71 @@ const Page = () => {
             <SafeAreaView style={{ flex: 1 }}>
                 <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 16 }}>
                     <View>
-                        <Text>{getGreeting()}, {displayName || user?.email}</Text>
+                        <Text style={styles.greeting}>
+                            {getGreeting()},{" "}
+                            <Text style={styles.greetingName}>
+                                {displayName || user?.email?.split('@')[0]}
+                            </Text>
+                        </Text>
 
-                        <Text style={{ fontStyle: 'italic', marginVertical: 10 }}>💡 {quote}</Text>
+                        <FancyCard title="Daily Motivation" icon="lightbulb-outline" style={{ marginTop: 10, marginBottom: 16 }}>
+                            <Text style={{ fontStyle: 'italic', fontSize: 15, color: colors.text }}>
+                                💡 {quote}
+                            </Text>
+                        </FancyCard>
                         
-                        <View style={{ marginBottom: 24 }}>
-                            <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 10 }}>🔔 Upcoming Events:</Text>
-                            {reminders.length > 0 ? (
-                                <FlatList
-                                    data={reminders}
-                                    keyExtractor={(item) => item.id}
-                                    horizontal
-                                    pagingEnabled
-                                    showsHorizontalScrollIndicator={false}
-                                    renderItem={({ item }) => {
-                                        const eventDate = new Date(item.start.dateTime);
-                                        return (
-                                            <Card style={{
-                                                width: screenWidth * 0.9,
-                                                marginHorizontal: screenWidth * 0.05,
-                                                padding: 16,
-                                                backgroundColor: item.type === "exam" ? "#ffcccc" :
-                                                                item.type === "lecture" ? "#ccffcc" : "#cce5ff"
-                                            }}>
-                                                <Text style={{ fontWeight: "bold", fontSize: 16 }}>{item.title} ({item.type})</Text>
-                                                <Text>{eventDate.toLocaleDateString()} at {eventDate.toLocaleTimeString()}</Text>
-                                            </Card>
-                                        );
-                                    }}
-                                />
-                            ) : (
-                                <Text>No upcoming events in the next 5 days.</Text>
-                            )}
+                        <View style={{ marginBottom: 10 }}>
+                            <FancyCard title="Upcoming Events" icon="calendar">
+                                {reminders.length > 0 ? (
+                                    <FlatList
+                                        data={reminders}
+                                        keyExtractor={(item) => item.id}
+                                        horizontal
+                                        pagingEnabled
+                                        showsHorizontalScrollIndicator={false}
+                                        renderItem={({ item }) => {
+                                            const eventDate = new Date(item.start.dateTime);
+                                            return (
+                                                <View style={{
+                                                    width: screenWidth * 0.9,
+                                                    marginHorizontal: screenWidth * 0.05,
+                                                    padding: 16,
+                                                    backgroundColor: item.type === "exam" ? "#ffcccc" :
+                                                                    item.type === "lecture" ? "#ccffcc" : "#cce5ff",
+                                                    borderRadius: 12,
+                                                }}>
+                                                    <Text style={{ fontWeight: "bold", fontSize: 16 }}>{item.title} ({item.type})</Text>
+                                                    <Text>{eventDate.toLocaleDateString()} at {eventDate.toLocaleTimeString()}</Text>
+                                                </View>
+                                            );
+                                        }}
+                                    />
+                                ) : (
+                                    <Text>No upcoming events in the next 5 days.</Text>
+                                )}
+                            </FancyCard>
                         </View>
 
                         {recentMood && (
-                            <View style={{ backgroundColor: '#e0f7fa', padding: 14, borderRadius: 12, marginBottom: 10 }}>
-                                <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 4 }}> Most Recent Mood</Text>
+                            <FancyCard title="Most Recent Mood" icon="emoticon-happy-outline">
                                 <Text>Mood: {recentMood.mood}</Text>
                                 <Text>Emotion: {recentMood.emotion}</Text>
-                                <Text>Score: {recentMood.numericSentimentScore > 0 ? '+' : ''}{recentMood.numericSentimentScore.toFixed(2)}</Text>
-                            </View>
+                                <Text>
+                                    Score: {recentMood.numericSentimentScore > 0 ? '+' : ''}
+                                    {recentMood.numericSentimentScore.toFixed(2)}
+                                </Text>
+                            </FancyCard>
                         )}
 
                         {!esiLoading && stabilityData && (
-                            <View style={{ backgroundColor: '#fff3e0', padding: 16, borderRadius: 12, marginBottom: 10 }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                                    <Text style={{ fontWeight: 'bold', fontSize: 16 }}>
-                                        Emotion Stability Index
-                                    </Text>
-                                    <Pressable onPress={() => setEsiInfoVisible(true)} style={{ marginLeft: 6 }}>
-                                        <MaterialIcons name="info-outline" size={18} color="gray" />
-                                    </Pressable>
-                                </View>
+                            <FancyCard title="Emotion Stability Index" icon="brain">
+                                <Pressable
+                                    onPress={() => setEsiInfoVisible(true)}
+                                    style={{ alignSelf: 'flex-start', marginBottom: 6 }}
+                                >
+                                    <MaterialIcons name="info-outline" size={18} color="gray" />
+                                </Pressable>
+
                                 <Text>Stability Score: {stabilityData.stability_index.toFixed(2)}</Text>
                                 <Text>Burnout Risk: {stabilityData.burnout_risk}</Text>
 
@@ -265,7 +279,7 @@ const Page = () => {
                                         High risk of burnout — take a break or reflect today.
                                     </Text>
                                 )}
-                            </View>
+                            </FancyCard>
                         )}
 
                         <Modal isVisible={isEsiInfoVisible} onBackdropPress={() => setEsiInfoVisible(false)}>
@@ -285,15 +299,14 @@ const Page = () => {
                             </View>
                         </Modal>
 
-                        <View style={{ backgroundColor: '#f0f4ff', padding: 16, borderRadius: 12, marginBottom: 10 }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                                <Text style={{ fontWeight: 'bold', fontSize: 16 }}>
-                                    Weekly Mood Summary (Past 7 Days)
-                                </Text>
-                                <Pressable onPress={() => setInfoVisible(true)} style={{ marginLeft: 6 }}>
-                                    <MaterialIcons name="info-outline" size={18} color="gray" />
-                                </Pressable>
-                            </View>
+                        <FancyCard
+                            title="Weekly Mood Summary (Past 7 Days)"
+                            icon="calendar-outline"
+                            style={{ marginBottom: 10 }}
+                        >
+                            <Pressable onPress={() => setInfoVisible(true)} style={{ alignSelf: 'flex-start', marginBottom: 6 }}>
+                                <MaterialIcons name="info-outline" size={18} color="gray" />
+                            </Pressable>
 
                             {averageScore !== null ? (
                                 <Text style={{ fontSize: 16 }}>
@@ -302,7 +315,7 @@ const Page = () => {
                             ) : (
                                 <Text style={{ fontSize: 16 }}>No mood data yet this week.</Text>
                             )}
-                        </View>
+                        </FancyCard>
 
                         <Modal isVisible={isInfoVisible} onBackdropPress={() => setInfoVisible(false)}>
                             <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
@@ -325,14 +338,12 @@ const Page = () => {
                                 { label: 'Wellness', icon: 'heart-outline' as const, route: '/(resources)/wellnessResources' },
                                 { label: 'More', icon: 'dots-horizontal' as const, route: '/more' },
                             ].map((item, index) => (
-                                <Pressable
+                                <FancyTile
                                     key={index}
-                                    style={styles.tile}
+                                    label={item.label}
+                                    icon={item.icon}
                                     onPress={() => router.push(item.route as typeof router.push extends (path: infer P) => any ? P : never)}
-                                >
-                                    <MaterialCommunityIcons name={item.icon} size={32} color="#333" />
-                                    <Text style={styles.tileLabel}>{item.label}</Text>
-                                </Pressable>
+                                />
                             ))}
                         </View>
                     </View>
@@ -352,7 +363,7 @@ const styles = StyleSheet.create({
     tile: {
         width: '47%',
         aspectRatio: 1,
-        backgroundColor: colors.surface,
+        backgroundColor: '#d6e0ff', 
         borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
@@ -365,6 +376,18 @@ const styles = StyleSheet.create({
         color: colors.text,
         
     },
+    greeting: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: colors.text,
+        marginBottom: 4,
+      },
+      
+      greetingName: {
+        color: colors.primary,
+        fontWeight: '700',
+      },
+      
 });
 
 export default Page;
