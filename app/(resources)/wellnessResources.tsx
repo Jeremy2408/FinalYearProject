@@ -3,6 +3,8 @@ import { ScrollView, View, StyleSheet, Linking } from 'react-native';
 import { Card, Paragraph, Button } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BackButton from '../../components/BackButton';
+import { LinearGradient } from 'expo-linear-gradient';
+import colors from '@/colors';
 
 type ResourceItem = {
   title: string;
@@ -44,6 +46,10 @@ const WellnessResources = () => {
   };
 
   return (
+    <LinearGradient
+    colors={[colors.gradientStart, colors.gradientEnd]}
+    style={{ flex: 1 }}
+  >
     <SafeAreaView style={styles.safeArea}>
       <BackButton />
       <ScrollView contentContainerStyle={styles.container}>
@@ -60,13 +66,13 @@ const WellnessResources = () => {
         ))}
       </ScrollView>
     </SafeAreaView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   container: {
     padding: 16,

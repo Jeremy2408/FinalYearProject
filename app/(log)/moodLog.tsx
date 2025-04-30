@@ -6,6 +6,11 @@ import { getAuth } from 'firebase/auth';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BackButton from '@/components/BackButton';
+import { LinearGradient } from 'expo-linear-gradient';
+import colors from '@/colors';
+import FancyCard from '@/components/FancyCard';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
 
 const MoodLog = () => {
     const [mood, setMood] = useState('');
@@ -96,11 +101,19 @@ const MoodLog = () => {
     
 
     return (
+      <LinearGradient
+        colors={[colors.gradientStart, colors.gradientEnd]}
+        style={{ flex: 1 }}
+      >
         <SafeAreaView style={styles.container}>
-               <BackButton />
-           
+          <BackButton />
+
+          <View style={{ marginBottom: 16, alignItems: 'center' }}>
+            <MaterialCommunityIcons name="notebook-outline" size={32} color={colors.primary} />
             <Text style={styles.title}>Log Your Mood</Text>
-            <Text style={styles.subtitle}>Today is {getCurrentDay()}</Text>
+            <Text style={styles.subtitle}>🗓️ Today is {getCurrentDay()}</Text>
+          </View>
+
             <TextInput
                 style={styles.input}
                 multiline
@@ -111,41 +124,60 @@ const MoodLog = () => {
             />
 
             {submittedEmotion !== '' && (
-                <View style={styles.resultBox}>
-                    <Text style={styles.resultText}>Submitted Mood: {submittedMood}</Text>
-                    <Text style={styles.resultText}>Detected Emotion: {submittedEmotion}</Text>
-                    <Text style={styles.resultText}>Sentiment Score: {numericScore > 0 ? '+' : ''}{numericScore}</Text>
+          <FancyCard title="Mood Submitted" icon="emoticon-outline" style={{ marginVertical: 16 }}>
+            <Text style={styles.resultText}>Submitted Mood: {submittedMood}</Text>
+            <Text style={styles.resultText}>Detected Emotion: {submittedEmotion}</Text>
+            <Text style={styles.resultText}>Sentiment Score: {numericScore > 0 ? '+' : ''}{numericScore}</Text>
+          </FancyCard>
 
-                </View>
-            )}
+        )}
 
-            <Button title="Submit" onPress={handleSubmit} />
-            <Button title="View Mood History" onPress={() => router.push('/(log)/moodHistory')} />
-        </SafeAreaView>
-    );
+        <Pressable style={styles.button} onPress={handleSubmit}>
+          <Text style={styles.buttonText}>Submit</Text>
+        </Pressable>
+
+        <Pressable style={styles.secondaryButton} onPress={() => router.push('/(log)/moodHistory')}>
+          <Text style={styles.secondaryButtonText}>View Mood History</Text>
+        </Pressable>
+
+      </SafeAreaView>
+    </LinearGradient>
+
+  );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
-        backgroundColor: '#fff',
     },
     title: {
-        fontSize: 24,
-        marginBottom: 8,
+      fontSize: 26,
+      fontWeight: '700',
+      color: colors.text,
+      marginTop: 12,
+      textAlign: 'center',
     },
     subtitle: {
-        fontSize: 18,
-        marginBottom: 16,
+      fontSize: 16,
+      color: colors.muted,
+      marginTop: 4,
+      textAlign: 'center',
     },
+    
     input: {
-        height: 50,
-        borderColor: '#ccc',
-        borderWidth: 1,
-        padding: 8,
-        marginBottom: 16,
+      minHeight: 100,
+      backgroundColor: 'white',
+      borderRadius: 12,
+      padding: 14,
+      fontSize: 16,
+      shadowColor: '#000',
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+      marginBottom: 16,
     },
+    
     resultBox: {
         marginVertical: 16,
         padding: 16,
@@ -157,6 +189,35 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginBottom: 4,
     },
+    button: {
+      backgroundColor: colors.primary,
+      paddingVertical: 14,
+      borderRadius: 12,
+      alignItems: 'center',
+      marginTop: 10,
+    },
+    
+    buttonText: {
+      color: colors.white,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    
+    secondaryButton: {
+      backgroundColor: 'transparent',
+      paddingVertical: 14,
+      borderRadius: 12,
+      alignItems: 'center',
+      marginTop: 12,
+    },
+    
+    secondaryButtonText: {
+      color: colors.primary,
+      fontSize: 16,
+      fontWeight: '600',
+      textDecorationLine: 'underline',
+    },
+    
 });
 
 export default MoodLog;

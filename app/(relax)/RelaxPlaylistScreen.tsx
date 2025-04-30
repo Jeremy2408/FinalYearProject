@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Pressable, Modal, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Pressable, Modal, ScrollView, Image} from 'react-native';
 import Slider from '@react-native-community/slider';
 import TrackPlayer, { State, usePlaybackState, useProgress, Capability, Event } from 'react-native-track-player';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +10,8 @@ import { auth } from '@/FirebaseConfig';
 import BackButton from '../../components/BackButton';
 import { Provider } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import colors from '@/colors';
 const appLogo = require('../../assets/images/appLogo.png');
 
 const defaultPlaylist = [
@@ -297,6 +299,10 @@ const RelaxPlaylistScreen = () => {
 
   return (
     <Provider>
+        <LinearGradient
+        colors={[colors.gradientStart, colors.gradientEnd]}
+        style={{ flex: 1 }}
+      >
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.headerRow}>
           <BackButton />
@@ -385,6 +391,7 @@ const RelaxPlaylistScreen = () => {
         </Modal>
 
         <View style={styles.container}>
+        <Image source={appLogo} style={styles.logo} />
           <Text style={styles.title}>Relaxing Playlist</Text>
           <Text style={styles.subtitle}>Now playing:</Text>
           <Text style={styles.trackName}>{currentTrack.title}</Text>
@@ -425,6 +432,7 @@ const RelaxPlaylistScreen = () => {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+      </LinearGradient>
     </Provider>
   );
 };
@@ -432,7 +440,6 @@ const RelaxPlaylistScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f3faff',
   },
   container: {
     flex: 1,
@@ -517,6 +524,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     marginTop: 10,
+  },
+  logo: {
+    width: 265,               
+    height: 265,
+    resizeMode: 'contain',
+    alignSelf: 'center',
+    marginBottom: 24,
   },
 });
 

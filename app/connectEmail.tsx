@@ -9,6 +9,9 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconButton } from 'react-native-paper';
 import BackButton from '@/components/BackButton';
+import { LinearGradient } from 'expo-linear-gradient';
+import colors from '@/colors';
+import FancyCard from '@/components/FancyCard';
 
 const BASE_URL = 'https://us-central1-final-year-project-2bae1.cloudfunctions.net';
 
@@ -110,11 +113,13 @@ export default function ConnectEmail() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <SafeAreaView edges={['top']} style={{ backgroundColor: '#fff' }}>
+    <LinearGradient
+      colors={[colors.gradientStart, colors.gradientEnd]}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <View style={styles.header}>
-        <BackButton />
-
+          <BackButton />
           <IconButton
             icon="dots-vertical"
             size={30}
@@ -122,7 +127,6 @@ export default function ConnectEmail() {
             onPress={() => setOptionsVisible(true)}
           />
         </View>
-      </SafeAreaView>
 
       <ScrollView contentContainerStyle={styles.container}>
         {loading && <ActivityIndicator size="large" style={{ marginTop: 20 }} />}
@@ -150,11 +154,17 @@ export default function ConnectEmail() {
                 }
                 key={idx}
               >
-                <View style={styles.emailCard}>
-                  <Text style={styles.subject}>{email.subject || '(No Subject)'}</Text>
-                  <Text>{email.from?.emailAddress?.name || 'Unknown sender'}</Text>
-                  <Text style={styles.preview}>{email.bodyPreview?.slice(0, 100)}...</Text>
-                </View>
+                <FancyCard
+                  title={email.subject || '(No Subject)'}
+                  icon="email-outline"
+                  style={{ marginBottom: 12 }}
+                >
+                  <Text style={{ fontWeight: '600' }}>{email.from?.emailAddress?.name || 'Unknown sender'}</Text>
+                  <Text style={{ fontStyle: 'italic', color: colors.muted, marginTop: 4 }}>
+                    {email.bodyPreview?.slice(0, 100)}...
+                  </Text>
+                </FancyCard>
+
               </TouchableOpacity>
             ))}
           </View>
@@ -185,9 +195,10 @@ export default function ConnectEmail() {
               <Text style={styles.modalText}>Disconnect</Text>
             </Pressable>
           </View>
-        </TouchableOpacity>
+       </TouchableOpacity>
       </Modal>
-    </View>
+    </SafeAreaView>
+  </LinearGradient>
   );
 }
 

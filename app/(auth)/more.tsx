@@ -1,15 +1,19 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet, Alert } from 'react-native';
+import { View, Text, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { auth } from '@/FirebaseConfig';
-import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import BackButton from '@/components/BackButton';
-import Animated, { FadeInUp } from 'react-native-reanimated';
 import FancyTile from '@/components/FancyTile';
+import FancyCard from '@/components/FancyCard';
+import { LinearGradient } from 'expo-linear-gradient';
+import colors from '@/colors';
+import { doc, getDoc, getFirestore } from 'firebase/firestore';
 
 const MoreScreen = () => {
   const router = useRouter();
+  const [displayName, setDisplayName] = React.useState<string | null>(null);
 
   const handleSignOut = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -22,6 +26,23 @@ const MoreScreen = () => {
     ]);
   };
 
+  React.useEffect(() => {
+    const fetchName = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+  
+      const db = getFirestore();
+      const docRef = doc(db, "users", user.uid);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        setDisplayName(data.name || null);
+      }
+    };
+  
+    fetchName();
+  }, []);
+
   const items: { label: string; icon: React.ComponentProps<typeof MaterialCommunityIcons>['name']; route?: string; action?: () => void }[] = [
     { label: 'Connect Email', icon: 'email', route: '/connectEmail' },
     { label: 'Chatrooms', icon: 'chat', route: '/(chatroom)/chatRoomList' },
@@ -29,9 +50,16 @@ const MoreScreen = () => {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <LinearGradient
+      colors={[colors.gradientStart, colors.gradientEnd]}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={styles.container}>
         <BackButton />
-      <Text style={styles.heading}>⚙️ More</Text>
+        <FancyCard title="More" icon="cog-outline" style={{ marginBottom: 10 }}>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text, marginBottom: 6 }}>
+          Logged in as: <Text style={{ color: colors.primary }}>{displayName || auth.currentUser?.email}</Text>
+          </Text>
       <View style={styles.tileGrid}>
         {items.map((item, index) => (
           <FancyTile
@@ -39,8 +67,8 @@ const MoreScreen = () => {
             label={item.label}
             icon={item.icon}
             iconSize={32}
-            fontSize={16} 
-            allowWrap={false} 
+            fontSize={16}
+            allowWrap={false}
             onPress={() =>
               item.route
                 ? router.push(item.route as typeof router.push extends (path: infer P) => any ? P : never)
@@ -51,13 +79,15 @@ const MoreScreen = () => {
         <FancyTile
           label="Mood Analytics"
           icon="chart-line"
-          iconSize={32} 
-          fontSize={16} 
+          iconSize={32}
+          fontSize={16}
           allowWrap={true}
-          onPress={() => router.push('/(analytics)/moodAnalytics')}
-        />
+   onPress={() => router.push('/(analytics)/moodAnalytics')}
+       />
       </View>
+    </FancyCard>
     </SafeAreaView>
+   </LinearGradient>
   );
 };
 
@@ -67,26 +97,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#fff',
   },
   heading: {
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
-  },
-  menu: {
-    marginTop: 10,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomColor: '#ccc',
-    borderBottomWidth: 1,
-  },
-  menuText: {
-    fontSize: 16,
-    color: '#333',
+    color: colors.text,
   },
   tileGrid: {
     flexDirection: 'row',
@@ -94,19 +110,4 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 20,
   },
-  tile: {
-    width: '47%',
-    aspectRatio: 1,
-    backgroundColor: '#e0e7ff',
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  tileLabel: {
-    marginTop: 8,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  
 });

@@ -6,6 +6,11 @@ import { getAuth } from 'firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import BackButton from '../../components/BackButton';
+import { LinearGradient } from 'expo-linear-gradient';
+import colors from '@/colors';
+import FancyCard from '@/components/FancyCard';
+import Animated, { FadeInUp } from 'react-native-reanimated';
+
 
 interface MoodLog {
     id: string;
@@ -51,20 +56,26 @@ const MoodHistory = () => {
         fetchMoodLogs();
     }, [user]);
 
-    const renderItem: ListRenderItem<MoodLog> = ({ item }) => (
-        <View style={styles.logItem}>
-            <Text style={styles.logText}>Day: {item.day}</Text>
-            <Text style={styles.moodText}>Mood: {item.mood}</Text>
-            <Text style={styles.emotion}>Emotion: {item.emotion}</Text>
-            <Text style={styles.score}>
+    const renderItem: ListRenderItem<MoodLog> = ({ item, index }) => (
+        <Animated.View entering={FadeInUp.delay(index * 50)}>
+
+        <FancyCard title={`Mood on ${item.day}`} icon="calendar-heart" style={{ marginBottom: 12 }}>
+        <Text style={styles.moodText}>Mood: {item.mood}</Text>
+        <Text style={styles.emotion}>Emotion: {item.emotion}</Text>
+        <Text style={styles.score}>
           Sentiment Score: {item.numericSentimentScore > 0 ? '+' : ''}{item.numericSentimentScore}
         </Text>
-
-            <Text style={styles.timestamp}>{getRelativeTime(item.timestamp)}</Text>
-        </View>
+        <Text style={styles.timestamp}>{getRelativeTime(item.timestamp)}</Text>
+      </FancyCard>
+        </Animated.View>
+      
     );
 
     return (
+        <LinearGradient
+        colors={[colors.gradientStart, colors.gradientEnd]}
+        style={{ flex: 1 }}
+      >
         <SafeAreaView style={styles.container}>
                    <BackButton />          
             <Text style={styles.title}>Mood History</Text>
@@ -74,6 +85,7 @@ const MoodHistory = () => {
                 keyExtractor={item => item.id}
             />
         </SafeAreaView>
+        </LinearGradient>
     );
 };
 
@@ -81,7 +93,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
-        backgroundColor: '#f5f5f5',
     },
     title: {
         fontSize: 24,
