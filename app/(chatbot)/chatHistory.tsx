@@ -5,6 +5,10 @@ import { auth } from '@/FirebaseConfig';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BackButton from '@/components/BackButton';
+import colors from '@/colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import FancyCard from '@/components/FancyCard';
+
 
 interface ChatMessage {
   _id: string;
@@ -52,6 +56,10 @@ const ChatHistory = () => {
   }, [user]);
 
   return (
+    <LinearGradient
+      colors={[colors.gradientStart, colors.gradientEnd]}
+      style={{ flex: 1 }}
+    >
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
       <BackButton />
@@ -63,21 +71,23 @@ const ChatHistory = () => {
         data={groupedChats}
         keyExtractor={(item) => item.date}
         renderItem={({ item }) => (
-          <Pressable
-            style={styles.chatCard}
-            onPress={() =>
+          <FancyCard title={item.date} icon="chat-outline" style={{ marginBottom: 12 }}>
+            <Pressable onPress={() =>
               router.push({
                 pathname: '/(chatbot)/chatHistoryView',
-                params: { date: item.date as string }
+                params: { date: item.date }
               })
-            }
-          >
-            <Text style={styles.chatDate}>{item.date}</Text>
-            <Text numberOfLines={1} style={styles.preview}>{item.messages[0]?.text}</Text>
-          </Pressable>
+            }>
+              <Text numberOfLines={1} style={styles.preview}>
+                {item.messages[0]?.text || 'No message content'}
+              </Text>
+            </Pressable>
+          </FancyCard>
+
         )}
       />
     </SafeAreaView>
+    </LinearGradient>
   );
 };
 

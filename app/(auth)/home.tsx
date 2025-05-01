@@ -14,6 +14,7 @@ import colors from '@/colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import FancyTile from '@/components/FancyTile';
 import FancyCard from '@/components/FancyCard';
+import FancyModal from "@/components/FancyModal";
 
 interface Event {
     id: string;
@@ -290,22 +291,25 @@ const Page = () => {
                             </FancyCard>
                         )}
 
-                        <Modal isVisible={isEsiInfoVisible} onBackdropPress={() => setEsiInfoVisible(false)}>
-                            <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
-                                <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 6 }}>
-                                    What is the Emotion Stability Index?
-                                </Text>
-                                <Text style={{ fontSize: 14, marginBottom: 10 }}>
-                                    The Emotion Stability Index (ESI) measures how emotionally consistent you've been over the past week.
-                                    A high score means your emotions have been fluctuating a lot — which can be a sign of stress or burnout risk.
-                                    Lower scores suggest more emotional balance.
-                                </Text>
-                                <Text style={{ fontSize: 14, marginBottom: 10 }}>
-                                    This is calculated using a weighted mix of emotion variation and how frequently your mood shifts. Based on this score, the app also estimates your risk of burnout.
-                                </Text>
-                                <Button title="Got it" onPress={() => setEsiInfoVisible(false)} />
-                            </View>
-                        </Modal>
+                        <FancyModal
+                          isVisible={isEsiInfoVisible}
+                          onClose={() => setEsiInfoVisible(false)}
+                          title="What is the Emotion Stability Index?"
+                          icon="brain"
+                          buttonText="Got it"
+                            onConfirm={() => setEsiInfoVisible(false)}
+                          
+
+                        >
+                          <Text style={{ fontSize: 14, marginBottom: 10 }}>
+                            The Emotion Stability Index (ESI) measures how emotionally consistent you've been over the past week.
+                            A high score means your emotions have been fluctuating a lot — which can be a sign of stress or burnout risk.
+                            Lower scores suggest more emotional balance.
+                          </Text>
+                          <Text style={{ fontSize: 14, marginBottom: 10 }}>
+                            This is calculated using a weighted mix of emotion variation and how frequently your mood shifts. Based on this score, the app also estimates your risk of burnout.
+                          </Text>
+                        </FancyModal>
 
                         <FancyCard
                             title="Weekly Mood Summary (Past 7 Days)"
@@ -325,17 +329,20 @@ const Page = () => {
                             )}
                         </FancyCard>
 
-                        <Modal isVisible={isInfoVisible} onBackdropPress={() => setInfoVisible(false)}>
-                            <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
-                                <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 6 }}>
-                                    What's this?
-                                </Text>
-                                <Text style={{ fontSize: 14 }}>
-                                    This summary shows your average mood score from the last 7 calendar days. It’s a quick emotional snapshot for recent days.
-                                </Text>
-                                <Button title="Got it" onPress={() => setInfoVisible(false)} />
-                            </View>
-                        </Modal>
+                        <FancyModal
+                            isVisible={isInfoVisible}
+                            onClose={() => setInfoVisible(false)}
+                            title="What's this?"
+                            icon="calendar-outline"
+                            buttonText="Got it"
+                            onConfirm={() => setInfoVisible(false)}
+                        >
+                            <Text style={{ fontSize: 14, textAlign: 'center' }}>
+                                This summary shows your average mood score from the last 7 calendar days.
+                                It’s a quick emotional snapshot for recent days.
+                            </Text>
+                        </FancyModal>
+
 
                         <View style={styles.tileGrid}>
                             {[

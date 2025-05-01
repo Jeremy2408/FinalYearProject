@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { CalendarBody, CalendarContainer, CalendarHeader, DraggingEvent, DraggingEventProps, OnCreateEventResponse, PackedEvent, SizeAnimation } from '@howljs/calendar-kit';
-import { View, Modal, TextInput, Button, SafeAreaView, Pressable, Text, Alert, TouchableOpacity, ScrollView, FlatList } from 'react-native';
+import { View, Modal, TextInput, Button, SafeAreaView, Pressable, Text, Alert, TouchableOpacity, ScrollView, FlatList, FlexAlignType } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { collection, addDoc, getFirestore, getDocs, deleteDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
@@ -9,6 +9,7 @@ import { RRule } from 'rrule';
 import { configureReanimatedLogger } from 'react-native-reanimated';
 import { IconButton } from 'react-native-paper';
 import BackButton from '@/components/BackButton';
+import colors from '@/colors';
 
 configureReanimatedLogger({
   // Removed invalid property 'disableForMessage' as it does not exist in 'LoggerConfig'
@@ -343,7 +344,7 @@ const Calendar = () => {
           backgroundColor: event.color,
           borderRadius: 5,
           width: '100%',
-          alignItems: 'center',
+          alignItems: 'center' as FlexAlignType,
           justifyContent: 'center'
         }}>
           <Text
@@ -536,9 +537,12 @@ const Calendar = () => {
               </TouchableOpacity>
             ))}
           </View>
-
-          <Button title="Create Event" onPress={addEvent} />
-          <Button title="Cancel" onPress={() => setModalVisible(false)} />
+          <Pressable style={styles.primaryButton} onPress={addEvent}>
+            <Text style={styles.buttonText}>Create Event</Text>
+          </Pressable>
+          <Pressable style={{ ...styles.secondaryButton, alignItems: 'center' }} onPress={() => setModalVisible(false)}>
+            <Text style={styles.secondaryButtonText}>Cancel</Text>
+          </Pressable>
         </View>
       </View>
     </Modal>
@@ -635,11 +639,16 @@ const Calendar = () => {
                 onChangeText={setSearchQuery}
                 style={{ borderBottomWidth: 1, marginBottom: 10 }}
               />
-              <Button
-                title="Search"
+              <Pressable
+                style={[
+                  styles.primaryButton,
+                  loadingResults && { backgroundColor: '#ccc' }, // Disable styling
+                ]}
                 onPress={handleCourseSearch}
                 disabled={loadingResults}
-              />
+              >
+                <Text style={styles.buttonText}>Search</Text>
+              </Pressable>
 
               <ScrollView style={{ maxHeight: 200 }}>
                 {searchResults.map((result, index) => (
@@ -648,7 +657,6 @@ const Calendar = () => {
                   </TouchableOpacity>
                 ))}
               </ScrollView>
-
 
               {previewEvents.length > 0 && (
                 <ScrollView style={{ maxHeight: 200, marginTop: 10 }}>
@@ -659,11 +667,15 @@ const Calendar = () => {
                     <Text key={index}> {title}</Text>
                   ))}
 
-                  <Button title="Save to Calendar" onPress={handleSavePreview} />
+                  <Pressable style={styles.primaryButton} onPress={handleSavePreview}>
+                    <Text style={styles.buttonText}>Save to Calendar</Text>
+                  </Pressable>
                 </ScrollView>
               )}
 
-              <Button title="Close" onPress={() => setShowImportModal(false)} />
+              <Pressable style={{ ...styles.secondaryButton, alignItems: 'center' as FlexAlignType }} onPress={() => setShowImportModal(false)}>
+                <Text style={styles.secondaryButtonText}>Close</Text>
+              </Pressable>
             </View>
           </View>
         </Modal>
@@ -705,10 +717,14 @@ const Calendar = () => {
                   <Text style={{ marginTop: 10, fontStyle: 'italic' }}>
                     Linked to: {selectedEvent.linkedGroupChatName || 'Unknown group'}
                   </Text>
-                  <Button title="Change Group Link" onPress={() => setGroupOpen(true)} />
+                  <Pressable style={styles.primaryButton} onPress={() => setGroupOpen(true)}>
+                    <Text style={styles.buttonText}>Change Group Link</Text>
+                  </Pressable>
                 </>
               ) : (
-                <Button title="Link to Group Chat" onPress={() => setGroupOpen(true)} />
+                <Pressable style={styles.primaryButton} onPress={() => setGroupOpen(true)}>
+                  <Text style={styles.buttonText}>Link to Group Chat</Text>
+                </Pressable>
               )}
 
               {groupOpen && (
@@ -737,14 +753,18 @@ const Calendar = () => {
 
                   {showSaveButton && (
                     <>
-                      <Button title="Save Link" onPress={handleLinkSave} />
-                      <Button
-                        title="Cancel"
+                      <Pressable style={styles.primaryButton} onPress={handleLinkSave}>
+                        <Text style={styles.buttonText}>Save Link</Text>
+                      </Pressable>                      
+                      <Pressable
+                        style={{ ...styles.secondaryButton, alignItems: 'center' as FlexAlignType }}
                         onPress={() => {
                           setGroupOpen(false);
                           setShowSaveButton(false);
                         }}
-                      />
+                      >
+                        <Text style={styles.secondaryButtonText}>Cancel</Text>
+                      </Pressable>
                     </>
                   )}
                 </>
@@ -754,7 +774,10 @@ const Calendar = () => {
 
 
 
-              <Button title="Close" onPress={() => setShowEventModal(false)} />
+              <Pressable style={styles.primaryButton} onPress={() => setShowEventModal(false)}>
+                <Text style={styles.buttonText}>Close</Text>
+              </Pressable>
+
             </View>
           </View>
         </Modal>
@@ -765,5 +788,33 @@ const Calendar = () => {
     </SafeAreaView>
   );
 };
+
+const styles = {
+  primaryButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center' as const,
+    marginTop: 10,
+  },
+  buttonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: '600' as '600',
+  },
+  secondaryButton: {
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  secondaryButtonText: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '500' as '500',
+  },
+};
+
 
 export default Calendar;

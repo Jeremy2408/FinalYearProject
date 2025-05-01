@@ -6,6 +6,8 @@ import { getFirestore, collection, query, orderBy, getDocs, Timestamp } from 'fi
 import { auth } from '@/FirebaseConfig';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BackButton from '@/components/BackButton';
+import { LinearGradient } from 'expo-linear-gradient';
+import colors from '@/colors';
 
 const ChatHistoryView = () => {
   const { date } = useLocalSearchParams();
@@ -44,6 +46,10 @@ const ChatHistoryView = () => {
   }, [date, user]);
 
   return (
+    <LinearGradient
+    colors={[colors.gradientStart, colors.gradientEnd]}
+    style={{ flex: 1 }}
+>
     <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1, backgroundColor: '#fff' }}>
       <SafeAreaView style={styles.container}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -59,6 +65,7 @@ const ChatHistoryView = () => {
         />
       </SafeAreaView>
     </SafeAreaView>
+    </LinearGradient>
   );
 };
 
