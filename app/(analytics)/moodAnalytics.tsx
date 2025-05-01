@@ -11,6 +11,9 @@ import { MaterialIcons } from '@expo/vector-icons';
 import Modal from 'react-native-modal';
 import { ScrollView } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import colors from '@/colors';
+import FancyCard from '@/components/FancyCard';
 
 
 const exportMoodDataAsCSV = async (moodData: { label: string, score: number }[]) => {
@@ -66,6 +69,10 @@ const MoodAnalytics = () => {
   }
 
   return (
+    <LinearGradient
+    colors={[colors.gradientStart, colors.gradientEnd]}
+    style={{ flex: 1 }}
+  >
     <SafeAreaView style={styles.container}>
       <BackButton />
 
@@ -77,64 +84,79 @@ const MoodAnalytics = () => {
       </View>
 
       <View style={styles.toggleContainer}>
-        <Button title="Daily" onPress={() => setViewMode('daily')} />
-        <Button title="Weekly" onPress={() => setViewMode('weekly')} />
-        <Button title="Monthly" onPress={() => setViewMode('monthly')} />
-      </View>
+  {['daily', 'weekly', 'monthly'].map(mode => (
+    <Pressable
+      key={mode}
+      style={[
+        styles.toggleButton,
+        viewMode === mode && { backgroundColor: colors.primary },
+      ]}
+      onPress={() => setViewMode(mode as any)}
+    >
+      <Text style={{
+        color: viewMode === mode ? 'white' : colors.primary,
+        fontWeight: '600'
+      }}>
+        {mode.charAt(0).toUpperCase() + mode.slice(1)}
+      </Text>
+    </Pressable>
+  ))}
+</View>
 
-      {average !== 'N/A' && (
-        <View style={styles.summaryBox}>
-          <Text style={styles.summaryTitle}>
-            {viewMode === 'daily'
-              ? 'Daily Trends (All Days)'
-              : viewMode === 'weekly'
-              ? 'Weekly Trends (Calendar Weeks)'
-              : 'Monthly Trends'}
-          </Text>
-          <Text style={styles.summaryText}>
-            Avg of {moodData.length} {viewMode} entries: {avgNum > 0 ? '+' : ''}
-            {average} — {moodLabel}
-          </Text>
-        </View>
-      )}
+
+        {average !== 'N/A' && (
+          <FancyCard title={`${viewMode[0].toUpperCase() + viewMode.slice(1)} Trends`} icon="chart-line">
+            <Text style={styles.summaryText}>
+              Avg of {moodData.length} {viewMode} entries: {avgNum > 0 ? '+' : ''}{average} — {moodLabel}
+            </Text>
+          </FancyCard>
+
+        )}
 
       {validData && dataPoints.length > 0 ? (
         <View style={styles.chartWrapper}>
-          <Animated.View entering={FadeIn.duration(600)}>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={{ padding: 10, borderRadius: 16, backgroundColor: '#f0f4ff' }}>
-              <LineChart
-                data={{
-                  labels: labels.map((label, i) =>
-                    viewMode === 'monthly' ? label : i % 3 === 0 ? label : ''
-                  ),
-                  datasets: [{ data: dataPoints }],
-                }}
-                width={Math.max(labels.length * 50, Dimensions.get('window').width)}
-                height={250}
-                yAxisInterval={0.5}
-                chartConfig={{
-                  backgroundColor: '#ffffff',
-                  backgroundGradientFrom: '#f0f4ff',
-                  backgroundGradientTo: '#f0f4ff',
-                  decimalPlaces: 2,
-                  color: (opacity = 1) => `rgba(55, 83, 255, ${opacity})`,
-                  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                  propsForDots: { r: "5", strokeWidth: "2", stroke: "#4A90E2" },
-                }}
-                bezier
-                style={{ borderRadius: 16 }}
-              />
-            </View>
-          </ScrollView>
-          </Animated.View>
+          <FancyCard title="Mood Chart" icon="chart-bell-curve" style={{ marginTop: 16 }}>
+            <Animated.View entering={FadeIn.duration(600)}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={{ padding: 10, borderRadius: 16, backgroundColor: '#f0f4ff' }}>
+                  <LineChart
+                    data={{
+                      labels: labels.map((label, i) =>
+                        viewMode === 'monthly' ? label : i % 3 === 0 ? label : ''
+                      ),
+                      datasets: [{ data: dataPoints }],
+                    }}
+                    width={Math.max(labels.length * 50, Dimensions.get('window').width)}
+                    height={250}
+                    yAxisInterval={0.5}
+                    chartConfig={{
+                      backgroundColor: '#ffffff',
+                      backgroundGradientFrom: '#f0f4ff',
+                      backgroundGradientTo: '#f0f4ff',
+                      decimalPlaces: 2,
+                      color: (opacity = 1) => `rgba(55, 83, 255, ${opacity})`,
+                      labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                      propsForDots: { r: "5", strokeWidth: "2", stroke: "#4A90E2" },
+                    }}
+                    bezier
+                    style={{ borderRadius: 16 }}
+                  />
+                </View>
+              </ScrollView>
+            </Animated.View>
+          </FancyCard>
         </View>
       ) : (
         <Text style={{ marginVertical: 20 }}>No valid mood data available yet.</Text>
       )}
 
-      <Button title="Export CSV Report" onPress={() => exportMoodDataAsCSV(moodData)} />
+        <FancyCard title="Export & Share" icon="file-export" style={{ marginTop: 20 }}>
+          <Pressable onPress={() => exportMoodDataAsCSV(moodData)}>
+            <Text style={{ color: colors.primary, fontWeight: '600', textDecorationLine: 'underline' }}>
+              Export CSV Report
+            </Text>
+          </Pressable>
+        </FancyCard>
 
       <Modal isVisible={isInfoVisible} onBackdropPress={() => setInfoVisible(false)}>
         <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10 }}>
@@ -153,6 +175,7 @@ const MoodAnalytics = () => {
         </View>
       </Modal>
     </SafeAreaView>
+    </LinearGradient>
   );
 };
 
@@ -161,7 +184,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     alignItems: 'center',
-    backgroundColor: '#fff',
   },
   title: {
     fontSize: 20,
@@ -176,6 +198,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     marginBottom: 16,
+  },
+  toggleButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    alignItems: 'center',
   },
   summaryBox: {
     backgroundColor: '#f0f4ff',
