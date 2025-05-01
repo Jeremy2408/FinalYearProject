@@ -23,4 +23,5 @@ jobs:
       - name: Run Puppeteer scraper
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.FIREBASE_CREDENTIALS }}
-        run: node scrapeAndUpload.js
+        run: node functions/scrapeAndUpload.js
+
