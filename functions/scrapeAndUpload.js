@@ -3,6 +3,9 @@ const admin = require("firebase-admin");
 const fs = require("fs");
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+if (!process.env.FIREBASE_CREDENTIALS) {
+    throw new Error(" FIREBASE_CREDENTIALS not set in environment!");
+  }
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
