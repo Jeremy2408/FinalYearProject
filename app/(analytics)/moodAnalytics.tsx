@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, Dimensions, StyleSheet, Pressable, Button } from 'react-native';
+import { View, Text, Dimensions, StyleSheet, Pressable, Button, Alert, TouchableOpacity } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useWeeklyMoodData, useMonthlyMoodData, useDailyMoodData } from '../hooks/useMoodData';
 import { router } from 'expo-router';
+import * as Print from 'expo-print';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import BackButton from '../../components/BackButton';
@@ -14,6 +15,15 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import colors from '@/colors';
 import FancyCard from '@/components/FancyCard';
+import ViewShot from 'react-native-view-shot';
+import { captureRef } from 'react-native-view-shot';
+import { Image } from 'react-native';
+import { useRef } from 'react';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getAuth } from 'firebase/auth';
+import { IconButton } from 'react-native-paper';
+
+
 
 
 const exportMoodDataAsCSV = async (moodData: { label: string, score: number }[]) => {
@@ -33,6 +43,96 @@ const exportMoodDataAsCSV = async (moodData: { label: string, score: number }[])
   }
 };
 
+const exportMoodDataAsPDF = async (moodData: { label: string, score: number }[], chartRef: React.RefObject<ViewShot>) => {
+  try {
+    const average = moodData.length
+      ? (moodData.reduce((sum, val) => sum + val.score, 0) / moodData.length).toFixed(2)
+      : 'N/A';
+
+    const avgNum = parseFloat(average);
+    let moodLabel = 'Neutral';
+    if (!isNaN(avgNum)) {
+      if (avgNum > 0.2) moodLabel = 'Mostly Positive';
+      else if (avgNum < -0.2) moodLabel = 'Mostly Negative';
+    }
+
+    const uri = await captureRef(chartRef, {
+      format: 'png',
+      quality: 1,
+    });
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    const chartImgTag = `<img src="data:image/png;base64,${base64}" style="width:100%;height:auto;" />`;
+
+    const html = `
+      <html>
+        <head>
+          <style>
+            body { font-family: 'Helvetica', sans-serif; padding: 20px; }
+            h1 { color: #4A90E2; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+            th { background-color: #f2f2f2; }
+            .summary-box {
+              padding: 10px;
+              border-radius: 8px;
+              background: #f0f4ff;
+              margin: 20px 0;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Mood Report</h1>
+          <div class="summary-box">
+            <p><strong>Entries:</strong> ${moodData.length}</p>
+            <p><strong>Average Score:</strong> ${average}</p>
+            <p><strong>Overall Mood:</strong> ${moodLabel}</p>
+          </div>
+          ${chartImgTag}
+          <h2>Mood Entries</h2>
+          <table>
+            <tr><th>Date</th><th>Sentiment Score</th></tr>
+            ${moodData.map(item => `
+              <tr>
+                <td>${item.label}</td>
+                <td>${item.score}</td>
+              </tr>`).join('')}
+          </table>
+        </body>
+      </html>
+    `;
+
+    const { uri: pdfUri } = await Print.printToFileAsync({ html });
+
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) throw new Error("User not authenticated");
+
+    const storage = getStorage();
+    const response = await fetch(pdfUri);
+    const blob = await response.blob();
+
+    const filename = `mood-report-${Date.now()}.pdf`;
+    const storageRef = ref(storage, `mood_reports/${user.uid}/${filename}`);
+    await uploadBytes(storageRef, blob);
+    const downloadURL = await getDownloadURL(storageRef);
+
+    Alert.alert(" Report Saved", `PDF uploaded to Firebase.\n\nURL:\n${downloadURL}`);
+
+    const available = await Sharing.isAvailableAsync();
+    if (available) {
+      await Sharing.shareAsync(pdfUri);
+    } else {
+      alert('Sharing not available on this device.');
+    }
+  } catch (error) {
+    console.error("PDF Export failed:", error);
+    alert("Something went wrong while creating your report.");
+  }
+};
+
+
 const MoodAnalytics = () => {
   const [viewMode, setViewMode] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
 
@@ -40,6 +140,9 @@ const MoodAnalytics = () => {
   const weeklyData = useWeeklyMoodData();
   const monthlyData = useMonthlyMoodData();
   const [isInfoVisible, setInfoVisible] = useState(false);
+  const chartRef = useRef<ViewShot>(null);
+  const [optionsVisible, setOptionsVisible] = useState(false);
+
 
   const moodData =
     viewMode === 'daily'
@@ -74,7 +177,30 @@ const MoodAnalytics = () => {
     style={{ flex: 1 }}
   >
     <SafeAreaView style={styles.container}>
-      <BackButton />
+    <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 16 }}>
+
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+          <BackButton />
+          <IconButton icon="dots-vertical" size={28} iconColor="#007AFF" onPress={() => setOptionsVisible(true)} />
+        </View>
+
+        <Modal
+          isVisible={optionsVisible}
+          animationIn="fadeIn"
+          onBackdropPress={() => setOptionsVisible(false)}
+        >
+          <TouchableOpacity
+            style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.3)' }}
+            onPress={() => setOptionsVisible(false)}
+            activeOpacity={1}
+          >
+            <View style={{ backgroundColor: '#fff', paddingVertical: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16 }}>
+              <Pressable onPress={() => { setOptionsVisible(false); router.push('/SavedReportsScreen'); }} style={{ padding: 16 }}>
+                <Text style={{ fontSize: 16, fontWeight: '500' }}>View Saved Reports</Text>
+              </Pressable>
+            </View>
+          </TouchableOpacity>
+        </Modal>
 
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
         <Text style={styles.title}>Mood Trends Over Time</Text>
@@ -113,12 +239,14 @@ const MoodAnalytics = () => {
 
         )}
 
-      {validData && dataPoints.length > 0 ? (
-        <View style={styles.chartWrapper}>
+       {validData && dataPoints.length > 0 ? (
+         <View style={styles.chartWrapper}>
           <FancyCard title="Mood Chart" icon="chart-bell-curve" style={{ marginTop: 16 }}>
             <Animated.View entering={FadeIn.duration(600)}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <ViewShot ref={chartRef} options={{ format: 'png', quality: 1.0 }}>
                 <View style={{ padding: 10, borderRadius: 16, backgroundColor: '#f0f4ff' }}>
+                  
                   <LineChart
                     data={{
                       labels: labels.map((label, i) =>
@@ -142,6 +270,7 @@ const MoodAnalytics = () => {
                     style={{ borderRadius: 16 }}
                   />
                 </View>
+              </ViewShot>
               </ScrollView>
             </Animated.View>
           </FancyCard>
@@ -156,6 +285,12 @@ const MoodAnalytics = () => {
               Export CSV Report
             </Text>
           </Pressable>
+          <Pressable onPress={() => exportMoodDataAsPDF(moodData, chartRef)}>
+            <Text style={{ color: colors.primary, fontWeight: '600', textDecorationLine: 'underline', marginTop: 8 }}>
+              Export PDF Report (with Chart)
+            </Text>
+          </Pressable>
+          
         </FancyCard>
 
       <Modal isVisible={isInfoVisible} onBackdropPress={() => setInfoVisible(false)}>
@@ -174,6 +309,7 @@ const MoodAnalytics = () => {
           <Button title="Got it" onPress={() => setInfoVisible(false)} />
         </View>
       </Modal>
+    </ScrollView>
     </SafeAreaView>
     </LinearGradient>
   );

@@ -91,6 +91,7 @@ useEffect(() => {
       <Stack.Screen name="(timetable)" options={{ headerShown: false }} />
       <Stack.Screen name="(chatbot)" options={{ headerShown: false }} />
       <Stack.Screen name="(analytics)/moodAnalytics" options={{ headerShown: false }} />
+      <Stack.Screen name="(analytics)/SavedReportsScreen" options={{ headerShown: false }} />
       <Stack.Screen name="oauthRedirect" options={{ headerShown: false }} />
       <Stack.Screen name="connectEmail" options={{ headerShown: false }} />
       <Stack.Screen name="(resources)/wellnessResources" options={{ headerShown: false }} />
