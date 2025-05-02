@@ -13,7 +13,11 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 
-const inputDate = process.argv[2] || new Date().toISOString().split("T")[0];
+const inputDate =
+  process.argv[2] ||
+  new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+    .toISOString()
+    .split("T")[0];
 const inputLid = process.argv[3] || "3086";
 
 async function fetchLibraryAvailability(date = inputDate, lid = inputLid) {

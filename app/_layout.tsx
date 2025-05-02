@@ -99,6 +99,7 @@ useEffect(() => {
       <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="(emailview)/viewEmail" options={{ headerShown: false }} />
       <Stack.Screen name="signup" options={{ headerShown: false }} />
+      <Stack.Screen name="(library)/libraryAvailability" options={{ headerShown: false }} />
       
 
 

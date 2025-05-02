@@ -50,7 +50,14 @@ const MoreScreen = () => {
       label: 'Connect Email',
       customIcon: <Ionicons name="logo-microsoft" size={32} color="#0078D4" />, 
       route: '/connectEmail',
-    },    { label: 'Chatrooms', icon: 'chat', route: '/(chatroom)/chatRoomList' },
+    },
+    { label: 'Chatrooms', icon: 'chat', route: '/(chatroom)/chatRoomList' },
+    {
+      label: 'Library Rooms',
+      icon: 'book-open-page-variant',
+      route: '/libraryAvailability',
+    },
+    
     { label: 'Sign Out', icon: 'logout', action: handleSignOut },
   ];
 
