@@ -348,7 +348,7 @@ const Page = () => {
                             {[
                                 { label: 'Mood Log', icon: 'emoticon-outline' as const, route: '/(log)/moodLog' },
                                 { label: 'Playlist', icon: 'music' as const, route: '/(relax)/RelaxPlaylistScreen' },
-                                { label: 'Chatbot', icon: 'chat-outline' as const, route: '/(chatbot)/chat' },
+                                { label: 'Chatrooms', icon: 'chat-outline' as const, route: '/(chatroom)/chatRoomList' },
                                 { label: 'Timetable', icon: 'calendar-outline' as const, route: '/(timetable)/table' },
                                 { label: 'Wellness', icon: 'heart-outline' as const, route: '/(resources)/wellnessResources' },
                                 { label: 'More', icon: 'dots-horizontal' as const, route: '/more' },

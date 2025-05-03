@@ -51,7 +51,7 @@ const MoreScreen = () => {
       customIcon: <Ionicons name="logo-microsoft" size={32} color="#0078D4" />, 
       route: '/connectEmail',
     },
-    { label: 'Chatrooms', icon: 'chat', route: '/(chatroom)/chatRoomList' },
+    { label: 'Chatbot', icon: 'chat', route: '/(chatbot)/chat' },
     {
       label: 'Library Rooms',
       icon: 'book-open-page-variant',

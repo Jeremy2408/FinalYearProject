@@ -39,11 +39,7 @@ const ChatroomScreen: React.FC = () => {
 
   return (
     <SafeAreaView style = {{flex: 1}}> 
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0} 
-    >
+ 
        <BackButton />
     
       <GiftedChat
@@ -53,7 +49,6 @@ const ChatroomScreen: React.FC = () => {
         keyboardShouldPersistTaps="handled" 
       />
      
-    </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

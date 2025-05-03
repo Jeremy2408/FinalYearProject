@@ -16,17 +16,27 @@ class AssistantRequest(BaseModel):
     prompt: str
     roomId: str
     roomType: str  
+    mode: str = "default" 
 
 @router.post("/smart-assistant")
 async def smart_assistant(request: AssistantRequest):
     try:
         print(f" Incoming smart assistant request for {request.roomType}_chatrooms/{request.roomId}")
 
-        system_prompt = (
-            "You are a kind and emotionally supportive assistant for college students."
-            " Respond briefly (1-3 sentences max) with empathy and useful advice."
-            " Do not ask questions, just offer supportive, constructive replies."
-        )
+        if request.mode == "chat_assistant":
+            system_prompt = (
+                "You are a supportive AI mental health assistant specifically designed for college students experiencing stress from academics, deadlines, and social pressures.\n"
+                "- Provide empathetic and encouraging responses.\n"
+                "- Offer practical stress management strategies.\n"
+                "- Avoid clinical diagnoses.\n"
+                "- Keep responses short, friendly, and engaging."
+            )
+        else:
+            system_prompt = (
+                "You are a kind and emotionally supportive assistant for college students."
+                " Respond briefly (1-3 sentences max) with empathy and useful advice."
+                " Do not ask questions, just offer supportive, constructive replies."
+            )
 
         trigger_phrases = [
             "/resources",
