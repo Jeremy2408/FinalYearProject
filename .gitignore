@@ -49,3 +49,7 @@ serviceAccountKey.json
 
 ios/
 android/
+
+#
+FirebaseConfig.ts
+services/openaiService.js
