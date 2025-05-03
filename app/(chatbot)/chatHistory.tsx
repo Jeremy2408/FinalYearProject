@@ -36,8 +36,14 @@ const ChatHistory = () => {
       const q = query(chatsRef, orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
 
-      const chats: ChatMessage[] = snapshot.docs.map(doc => doc.data() as ChatMessage);
-
+      const chats: ChatMessage[] = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          _id: doc.id,  
+        } as ChatMessage;
+      });
+      
       const groups: { [key: string]: ChatMessage[] } = {};
       chats.forEach(msg => {
         const date = new Date(msg.createdAt.seconds * 1000).toLocaleDateString();

@@ -25,19 +25,21 @@ const ChatHistoryView = () => {
       const snapshot = await getDocs(q);
 
       const filteredMessages: IMessage[] = snapshot.docs
-        .map(doc => doc.data() as IMessage)
-        .filter(msg => {
-          const created = msg.createdAt instanceof Timestamp
-            ? msg.createdAt.toDate()
-            : new Date(msg.createdAt);
-          return created.toLocaleDateString() === date;
+        .map(doc => {
+          const msg = doc.data();
+          return {
+            _id: msg._id || msg.id || doc.id,
+            text: msg.text,
+            createdAt: msg.createdAt instanceof Timestamp
+              ? msg.createdAt.toDate()
+              : new Date(msg.createdAt),
+            user: msg.user || { _id: 'unknown', name: 'Unknown' }, 
+          } as IMessage;
         })
-        .map(msg => ({
-          ...msg,
-          createdAt: msg.createdAt instanceof Timestamp
-            ? msg.createdAt.toDate()
-            : new Date(msg.createdAt),
-        }));
+        .filter(msg => {
+          const created = msg.createdAt;
+          return (created instanceof Date ? created.toLocaleDateString() : new Date(created).toLocaleDateString()) === date;
+        });
 
       setMessages(filteredMessages.reverse());
     };
